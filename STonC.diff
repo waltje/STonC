@@ -1,0 +1,207 @@
+diff -Nrcpad STonC.orig/emulc/emulc.c STonC/emulc/emulc.c
+*** STonC.orig/emulc/emulc.c	Tue Mar 27 20:10:04 2001
+--- emulc/emulc.c	Wed Feb 16 21:30:56 2011
+*************** void ec_set_magic_handler(int key, void (*magic_handle
+*** 67,73 ****
+    
+  
+  #define MAGIC_KEY1 (((int)'²') & 0xFF)
+! #define MAGIC_KEY2 (((int)'ý') & 0xFF)
+  
+  /*
+   * key are sent through as curses gave them to us. If EmulC is ported to an
+--- 67,73 ----
+    
+  
+  #define MAGIC_KEY1 (((int)'²') & 0xFF)
+! #define MAGIC_KEY2 (((int)'\x1d') & 0xFF) /* ^] HO */
+  
+  /*
+   * key are sent through as curses gave them to us. If EmulC is ported to an
+*** STonC.orig/emulc/vtime.c	Fri Apr 11 17:34:30 2003
+--- emulc/vtime.c	Wed Feb 16 22:59:11 2011
+***************
+*** 164,171 ****
+  
+  /* choose one and only one way of obtaining time */
+  #define VT_TIME 0       /* time()           POSIX ? */
+! #define VT_TIMEOFDAY 0  /* gettimeofday()   BSD  */
+! #define VT_CLOCK 1      /* clock()          ANSI */
+  
+  /* choose one and only one way of sleeping for a period */
+  #define VT_SLEEP 1  /* sleep()   unistd.h */
+--- 164,171 ----
+  
+  /* choose one and only one way of obtaining time */
+  #define VT_TIME 0       /* time()           POSIX ? */
+! #define VT_TIMEOFDAY 1  /* gettimeofday()   BSD  */
+! #define VT_CLOCK 0      /* clock()          ANSI */
+  
+  /* choose one and only one way of sleeping for a period */
+  #define VT_SLEEP 1  /* sleep()   unistd.h */
+*************** void vt_init(void)
+*** 411,417 ****
+    first_alarm_time = -1 ;
+    first_alarm_cycle = 999999999 ;
+    vt_init_periods();
+!   epsilon = 1E-8;
+    et2 = 0;
+    vtime_status = VT_HALTED ;
+  #ifdef VT_TRACE
+--- 411,417 ----
+    first_alarm_time = -1 ;
+    first_alarm_cycle = 999999999 ;
+    vt_init_periods();
+!   epsilon = 1E-12;
+    et2 = 0;
+    vtime_status = VT_HALTED ;
+  #ifdef VT_TRACE
+*** STonC.orig/include/config.h	Wed Jan  7 12:11:09 2004
+--- include/config.h	Mon Feb 13 11:13:20 2006
+***************
+*** 24,30 ****
+  #undef NZREG
+  
+  /* do we need a small "memory model"? */
+! #define SMALL 1
+  
+  /* Make sure we know about the endianness of this system */
+  #ifndef IS_BIG_ENDIAN
+--- 24,30 ----
+  #undef NZREG
+  
+  /* do we need a small "memory model"? */
+! #define SMALL 0
+  
+  /* Make sure we know about the endianness of this system */
+  #ifndef IS_BIG_ENDIAN
+*** STonC.orig/include/options.h	Wed Jan  7 17:17:10 2004
+--- include/options.h	Mon Feb 13 22:56:30 2006
+***************
+*** 11,16 ****
+--- 11,17 ----
+   */
+  #ifndef SMALL
+  #define SMALL 1
++ #error "this should not happen"
+  #endif
+  
+  /* profile 68k ? */
+*** STonC.orig/machine/boss.c	Wed Jan  7 17:49:42 2004
+--- machine/boss.c	Wed Feb 16 21:26:54 2011
+*************** static void load_tos_file (char *file)
+*** 110,116 ****
+    }
+    ec_stderr( "Loading TOS%d image `%s'...\n", 2-tos_1, file);
+    count = fread(d, 1, 0x100000, f); /* FIXME */
+-   ec_stderr("count = %lx\n", (unsigned long) count);
+    fclose(f);
+  }
+  
+--- 110,115 ----
+*** STonC.orig/machine/mem.c	Wed Jan  7 12:11:22 2004
+--- machine/mem.c	Wed Feb 16 21:12:08 2011
+*************** void init_mem (void)
+*** 22,28 ****
+  {
+          memset(mem, 0, MEMSIZE);
+  
+!   if (warmboot) {
+                  SM_UL(MEM(0x420),0x752019f3);
+                  SM_UL(MEM(0x43a),0x237698aa);
+                  SM_UL(MEM(0x51a),0x5555aaaa);   /* might break older TOSes <1.02? */
+--- 22,29 ----
+  {
+          memset(mem, 0, MEMSIZE);
+  
+! 	/* warmboot = 1; HO */
+!         if (warmboot) {
+                  SM_UL(MEM(0x420),0x752019f3);
+                  SM_UL(MEM(0x43a),0x237698aa);
+                  SM_UL(MEM(0x51a),0x5555aaaa);   /* might break older TOSes <1.02? */
+*************** void init_mem (void)
+*** 30,35 ****
+--- 31,37 ----
+                  SM_UB(MEM(0x424),10);
+                  SM_UL(MEM(0x42e),0x400000);
+                  SM_UL(MEM(0x436),0x3f8000);
++ #error "this should not happen"
+  #else
+                  SM_UB(MEM(0x424),15);
+                  SM_UL(MEM(0x42e),0xe00000);
+*************** void init_mem (void)
+*** 41,46 ****
+--- 43,49 ----
+          SM_W(ADDR(0x446), boot_dev);
+          SM_W(ADDR(0x4a6), 0); /* _nflops may be different if we have FDC emul.*/
+          SM_L(ADDR(0x4c2), drive_bits);
++ 
+  #if 0
+          ec_stderr("boot_dev = %d cmdload = %d\n",boot_dev, LM_W(ADDR(0x482)));
+  #endif
+*** STonC.orig/machine/mem.h	Fri Apr 11 17:34:31 2003
+--- machine/mem.h	Mon Feb 13 23:26:58 2006
+*************** extern void mc68000_reset(void);
+*** 19,24 ****
+--- 19,25 ----
+  #if SMALL
+  #define MEMSIZE         0x800000
+  #define SMALL_MEM       0x400000
++ #error "this should not happen"
+  #else
+  #define MEMSIZE         0x1000000
+  #endif
+*** STonC.orig/machine/nf.c	Fri Apr 11 13:44:07 2003
+--- machine/nf.c	Wed Feb 16 22:17:32 2011
+*************** int nf_init(void)
+*** 172,177 ****
+    nf_register_func( "NF_VERSION", nf_version, 1);
+    nf_register_func( "NF_NAME", nf_name, 1);
+    nf_register_func( "NF_STDERR", nf_stderr, 1);
+-   nf_error("nf_init()\n");
+    return 0;
+  }
+--- 172,176 ----
+*** STonC.orig/machine/ocr.c	Wed Jan  7 12:11:25 2004
+--- machine/ocr.c	Wed Feb 16 10:44:16 2011
+*************** void ocr_screen_shifter(void)
+*** 539,544 ****
+--- 539,545 ----
+  {
+    int i;
+    
++ #if 0 /* HO . */
+    /* TODO, better handling of this */
+    if (vbase >= 0x400000) {
+      for (i = 0; i < 80 * 25; i++) {
+*************** void ocr_screen_shifter(void)
+*** 547,552 ****
+--- 548,556 ----
+    } else {
+      ocr_capture(mem+vbase, shiftmod, curscreen->c);
+    }
++ #else
++   ocr_capture(mem+vbase, shiftmod, curscreen->c);
++ #endif /* HO . */
+    for (i = 0; i < 25; i++) {
+      do_line_plain(i, screen_term);
+    }
+*** STonC.orig/obj/readme.txt	Mon Dec 16 17:01:43 2002
+--- obj/readme.txt	Thu Jan  1 01:00:00 1970
+***************
+*** 1,2 ****
+- This directory will hold temporary files generated while building STonC.
+- 
+--- 0 ----
+*** STonC.orig/stonxcpu/gen.c	Wed Jan  7 12:11:33 2004
+--- stonxcpu/gen.c	Mon Feb 13 22:58:41 2006
+***************
+*** 18,23 ****
+--- 18,24 ----
+  #include <stdlib.h>
+  #include <unistd.h>
+  #include "amdefs.h"
++ #include "config.h" /* HO */
+  #include "options.h"
+  
+  #define VERBOSE 0

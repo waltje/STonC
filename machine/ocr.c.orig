@@ -1,0 +1,643 @@
+/*
+ * ocr.c - atari video buffer rendering by means of poor man's OCR 
+ * techniques 
+ *
+ * Part of STonC (C) 1998-2002 Laurent Vogel
+ * Covered by the GPL version 2 or later; see COPYING for details
+ */
+
+typedef unsigned char uchar;
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "emulc.h"
+#include "ecterm.h"
+#include "ui.h"
+#include "mem.h"
+
+#include "ocr.h"
+
+#include "bhash.h"
+
+static BHash fnt8hash ;
+static BHash fnt16hash ;
+
+static BHash fnt8miss ;
+static BHash fnt16miss ;
+
+
+extern Term screen_term;
+
+static int ocr_load_file(char *);
+
+static void simple_fnt_init(void);
+
+int ocr_cmd_loadfont(int argc, char **argv);
+
+void ocr_init(void)
+{
+  fnt8hash = BHashNew(5000, 8);
+  fnt16hash = BHashNew(5000, 16);
+  fnt8miss = BHashNew(5000, 8);
+  fnt16miss = BHashNew(5000, 16);
+  simple_fnt_init();
+#if 0
+  if (!ocr_load_file("stoncfnt.txt")) {
+    ec_stderr("Could not load font bitmap file \"stoncfnt.txt\"\n");
+  } 
+#endif
+  ui_register_command("loadfont", ocr_cmd_loadfont,
+"usage: loadfont <file-name>.\n"
+"loadfont will load an additional font for the recognition engine\n"
+"for the screen terminal. the default file ./stoncfnt.txt is always\n"
+"tried first. use loadfont to load another font file.\n");
+}
+
+int ocr_cmd_loadfont(int argc, char **argv)
+{
+  int err;
+  if(argc != 2) {
+    ec_stderr("usage: loadfont <font-file>\n");
+    return 1;
+  }
+  err = ocr_load_file(argv[1]);
+  if(err == 0) {
+    ec_stderr("Could not load font bitmap file \"%s\"\n", argv[1]);
+    return 1;
+  } 
+  return 0;
+}
+
+static void simple_fnt_init(void)
+{
+  uchar bitmap[16];
+  int i;
+  int ch;
+  for(i = 0 ; i < 16 ; i++) {
+    bitmap[i] = 0;
+  }
+  ch = ' ';
+  BHashInsert(fnt16hash, (char *)bitmap, (void *)ch);
+  BHashInsert(fnt8hash, (char *)bitmap, (void *)ch);
+  for(i = 0 ; i < 16 ; i++) {
+    bitmap[i] = 255;
+  }
+  ch = TE_ATTR_REV + ' ';
+  BHashInsert(fnt16hash, (char *)bitmap, (void *)ch);
+  BHashInsert(fnt8hash, (char *)bitmap, (void *)ch);
+}
+
+static int ocr_add_bitmap(int h, uchar *bitmap, int ch)
+{
+  BHash b;
+  int i;
+  if(h == 16) {
+    b = fnt16hash;
+  } else {
+    b = fnt8hash;
+  }
+  BHashInsert(b, (char *)bitmap, (void *)ch);
+  for(i = 0 ; i < h ; i++) {
+    bitmap[i] = ~bitmap[i];
+  }
+  BHashInsert(b, (char *)bitmap, (void *)(TE_ATTR_REV + ch));
+  return 0;
+}
+
+/*
+  parsing the font bitmap file. This is ugly...
+*/
+static char * my_fgets(char *line, int max, FILE *f)
+{
+  int c=0;
+  int i;
+  char *s = line;
+  for(i = 0 ; i < max-1 ; i++) {
+    c = fgetc(f);
+    if(c == EOF) {
+      if(i == 0) {
+        return NULL;
+      } else {
+        line --;
+        while(line > s && *line == ' ')
+          line --;
+        line ++;
+              *line = 0;
+        
+        return s;
+      }
+    }
+    if(c == '#' && i == 0) {
+      line --;
+      while((line > s) && (*line == ' '))
+        line --;
+      line ++;
+      *line = 0;
+      while(c != 10 && c != 13 && c != EOF) {
+        c = fgetc(f);
+      }
+      return s;
+    }
+    if(c == 10 || c == 13) {
+      line --;
+      while((line > s) && (*line == ' '))
+        line --;
+      line++;
+      *line = 0;
+      return s;
+    }
+    *line++ = c;
+  }
+  while(c != 10 && c != 13 && c!= EOF) {
+    c = fgetc(f);
+  }
+  ec_stderr("line too long\n");
+  return NULL;
+}
+
+
+/* 0 means failure */
+static int ocr_load_file(char *fname)
+{
+  FILE *f;
+  char line[80];
+  uchar bitmap[16];
+  int ch, a, i, k;
+  int height;
+  int max = 80;
+  char *s;
+  int linenum = 0;
+  f = fopen(fname, "r");
+  if(f == NULL) {
+    ec_stderr("could not open file %s\n", fname);
+    return 0;
+  }
+  linenum++;
+  s = my_fgets(line, max, f);
+  if(s == NULL) goto fail;
+  if(strcmp(line, "stoncfnt")) goto fail;
+  linenum++;
+  s = my_fgets(line, max, f);
+  if(s == NULL) goto fail;
+  if(strcmp(line, "version1")) goto fail;
+  for(;;) {
+    linenum++;
+    s = my_fgets(line, max, f);
+    if(s == NULL) break;
+    height = 0;
+    if(!strcmp(line, "font16")) {
+      height = 16;
+    } else if(!strcmp(line, "font8")) {
+      height = 8;
+    } else goto fail;
+    ch = ' ';
+    for(;;) {
+      linenum++;
+      s = my_fgets(line, max, f);
+      if(s == NULL) goto fail;
+      if(!strcmp(line, "endfont")) break;
+      if(s[0] == 'c' && s[1] == 'h' && s[2] == 'a' && s[3] == 'r' &&
+          s[4] == ' ') {
+        s += 4;
+        while(*s == ' ') s++;
+        if(*s == '\'') {
+          s++;
+          if(*s == '\\') s++;
+          ch = *s;
+          s++;
+          if(*s != '\'') goto fail;
+          s++;
+          if(*s != 0) goto fail;
+        } else {
+          goto fail;
+        }
+      } else {
+        ec_stderr("expecting 'char ...'\n");
+        goto fail;
+      }
+        
+      for(i = 0 ; i < height ; i++) {
+        a = 0;
+        linenum++;
+        s = my_fgets(line, max, f);
+        if(s == NULL) goto fail;
+        for(k = 0x80 ; k ; k >>= 1) {
+          if(*s == '.') {
+          
+          } else if(*s == 'X') {
+            a += k;
+          } else { 
+            ec_stderr("line should only contain '.' and 'X'\n") ; 
+            goto fail;
+          }
+          s++;
+        }
+        bitmap[i] = a;
+      }
+      linenum++;
+      s = my_fgets(line, max, f);
+      if(s == NULL) goto fail;
+      if(strcmp(line, "endchar")) {
+        ec_stderr("expecting 'endchar'\n"); 
+        goto fail;
+      }
+      ocr_add_bitmap(height, bitmap, ch);
+    }
+  }
+  fclose(f);
+  return 1;
+fail:
+  fclose(f);
+  ec_stderr("stoncfnt.txt: syntax error line %d\n", linenum);
+  ec_stderr("line was '%s'\n", line);
+  ec_fatal("quit\n");
+  return 0;
+}
+
+struct screen_chars {
+  te_wchar c[80 * 25];
+  int sum[25];
+};
+
+struct screen_chars sc1, sc2, *oldscreen, *curscreen, *tmpscreen;
+
+static int compute_sum(te_wchar *c)
+{
+  int i;
+  int s;
+  s = 0;
+  for(i = 0 ; i < 80 ; i++) {
+    s = s + s + s + *c++;
+  }
+  return s;
+}
+
+static void clear_sc(struct screen_chars *sc)
+{
+  int i;
+  for(i = 0 ; i < 80 * 25 ; i++) {
+    sc->c[i] = ' ';
+  }
+  for(i = 0 ; i < 25 ; i++) {
+    sc->sum[i] = compute_sum(sc->c + 80 * i);
+  }
+}
+
+static void do_line_plain(int row, Term t)
+{
+  te_replace_line(t, row, curscreen->c+row*80);
+}
+
+#if 0 /* OLD */
+static void do_line_plain_old(int row, Term t)
+{
+  int i;
+  te_wchar *a, *b;
+  a = oldscreen->c+row*80;
+  b = curscreen->c+row*80;
+  /* very dull, but should work at least to test the overall 
+     architecture. */
+  i = 0;
+  while(i < 78) {
+    if(a[i] != b[i]) {
+      te_move(t, row, i) ; 
+      for(; i < 78 && a[i] != b[i] ; i++) {
+        te_output_char(t, b[i] & 255);
+      }
+    }
+    i++;
+  }
+  if( (b[78] != a[78]) || (b[79] != a[79]) ) {  
+    if(row == 24) {
+      te_move(t, 24, 78);
+      te_output_char(t, b[79] & 255);
+      te_move(t, 24, 78);
+      te_ins_one_char(t);
+      te_output_char(t, b[78] & 255);
+    } else {
+      te_move(t, row, 78);
+      te_output_char(t, b[78] & 255);
+      te_output_char(t, b[79] & 255);
+    }
+  }
+}
+#endif /* OLD */
+
+#if 0 /* TODO */
+static void do_line(int row, Term t)
+{
+  int ai, bi, i, j, k, n;
+  te_wchar *a, *b;
+  a = oldscreen->c+row*80;
+  b = curscreen->c+row*80;
+  /* il faudrait une sentinelle pour la fin de la ligne ? */
+  /* TODO, make sure that the terminal does not wrap lines, and does not
+  create new lines when adding chars at the end of a line */
+  /* TODO, build a list of the modifications, and then perform deletions
+  before insertions as the two operations do not commute */
+  for(i = 0 ; i < 80 ; i++) {
+        if(a[i] != b[i]) {
+                /* te_goto(t, row, i) ; */
+                break;
+        }
+  }
+  if(i == 80) return;
+  ai = bi = i;
+  for(n = 1 ; n < 10 ; n++) {
+    for(j = 0 ; j < n ; j++) {
+      if((ai+j < 78) && (bi+n-j < 78) &&
+        (a[ai+j] == b[bi+n-j])  &&  
+        (a[ai+j+1] == b[bi+n-j+1])  && 
+        (a[ai+j+2] == b[bi+n-j+2])) {
+          for(k = 0 ; k < j && k < n-j ; k++) {
+            /* te_addwch(b[bi+k]); */
+          }
+          if(k < j) {
+            /* te_del_n_chars(j-k); */
+          } else if(k < n-j) {
+            /* te_ins_n_chars(n-j-k); */
+            while(k < n-j) {
+              /* te_addwch(b[bi+k]); */
+              k++;
+            }
+          }
+          ai += j;
+          bi += n-j;
+          goto suite;
+      }
+    }
+  }
+  /* too many differences, renounce */
+  while(bi < 80) {
+    /* te_addwch(b[bi]); */
+    bi++;
+  }
+  suite:
+  while( (ai < 80) && (bi < 80) && (a[ai] == b[bi])) {
+        ai++;
+        bi++;
+  }
+  /* TODO deal with end of line */
+}
+          
+ 
+
+static void step_compare(Term t)
+{
+  int i, j;
+  int s;
+  int n;
+  int d;
+  int delta[25];
+  for(i = 0 ; i < 25 ; i++) {
+    delta[i] = -1;
+    curscreen->sum[i] = compute_sum(curscreen->c + 80 * i);
+  }
+  /* for all the old lines, look if I can find it in the new screen */
+  for(j = 0 ; j < 25 ; j++) {
+    s = oldscreen->sum[j];
+    for(i = j ; i < 25 ; i++) {
+      if(curscreen->sum[i] == s) {
+        delta[j] = i;
+        goto next_j;
+      }
+    }
+    for(i = j-1 ; i >= 0 ; i--) {
+      if(curscreen->sum[i] == s) {
+        delta[j] = i;
+        break;
+      }
+    }
+next_j:
+  }
+  /* TODO */
+}
+#endif /* TODO */
+
+void ocr_capture(char *vbase, int rez, te_wchar *screenbuf)
+{
+  char *p, *q;
+  char bitmap[16];
+  te_wchar *s;
+  int i,j,k;
+  void *z;
+
+/*
+ * ec_stderr("ocr_capture(rez = %d)\n",rez);
+ */
+ 
+  s = screenbuf;
+  switch(rez) {
+  case 0:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      for(i = 0 ; i < 40 ; i+=2) {
+        q = p;
+        for(k = 0 ; k < 8 ; k++) {
+          bitmap[k] = *q++;
+          bitmap[k+8] = *q;
+          q += 159;
+        }
+        z = BHashLookup(fnt8hash, (char *)bitmap);
+        if(z == NULL) {
+          *s++ = '#';
+        } else {
+          *s++ = (int)z;
+        }
+        z = BHashLookup(fnt8hash, (char *)bitmap+8);
+        if(z == NULL) {
+          *s++ = '#';
+        } else {
+          *s++ = (int)z;
+        }
+        p += 8;
+      }
+      for(i = 40 ; i < 80 ; i++) {
+        *s++ = ' ';
+      }
+      p += 160 * 7;
+    }
+    break;
+  case 1:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      for(i = 0 ; i < 80 ; i+=2) {
+        q = p;
+        for(k = 0 ; k < 8 ; k++) {
+          bitmap[k] = *q++;
+          bitmap[k+8] = *q;
+          q += 159;
+        }
+        z = BHashLookup(fnt8hash, (char *)bitmap);
+        if(z == NULL) {
+          *s++ = '#';
+        } else {
+          *s++ = (int)z;
+        }
+        z = BHashLookup(fnt8hash, (char *)bitmap+8);
+        if(z == NULL) {
+          *s++ = '#';
+        } else {
+          *s++ = (int)z;
+        }
+        p += 4;
+      }
+      p += 160 * 7;
+    }
+    break;
+  case 2:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      for(i = 0 ; i < 80 ; i++) {
+        q = p++;
+        for(k = 0 ; k < 16 ; k++) {
+          bitmap[k] = *q;
+          q += 80;
+        }
+        z = BHashLookup(fnt16hash, (char *)bitmap);
+        if(z == NULL) {
+          *s++ = '#';
+        } else {
+          *s++ = (int)z;
+        }
+      }
+      p += 80 * 15;
+    }
+  default:
+    break;
+  }
+}
+
+
+
+
+void ocr_screen_open(void)
+{
+  ocr_init();
+  curscreen = &sc1;
+  oldscreen = &sc2;
+
+  clear_sc(oldscreen);
+  clear_sc(curscreen);
+  te_clear(screen_term);
+  te_curs_set(screen_term, 0);
+}
+
+void ocr_screen_close(void)
+{
+}
+
+extern int shiftmod;
+extern volatile unsigned long vbase;
+extern char mem[];
+
+void ocr_raw_capture(char *vbase, int rez, te_wchar *screenbuf);
+
+void ocr_screen_shifter(void)
+{
+  int i;
+  
+  /* TODO, better handling of this */
+  if (vbase >= 0x400000) {
+    for (i = 0; i < 80 * 25; i++) {
+      curscreen->c[i] = '#';
+    }
+  } else {
+    ocr_capture(mem+vbase, shiftmod, curscreen->c);
+  }
+  for (i = 0; i < 25; i++) {
+    do_line_plain(i, screen_term);
+  }
+  te_move(screen_term, 24, 79);
+  te_refresh(screen_term);
+  
+  tmpscreen = oldscreen;
+  oldscreen = curscreen;
+  curscreen = tmpscreen;
+}
+
+
+void ocr_raw_capture(char *vbase, int rez, te_wchar *screenbuf)
+{
+  char *p, *q;
+  char c;
+  te_wchar *s;
+  int i,j,k;
+  
+  s = screenbuf;
+  switch(rez) {
+  case 0:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      q = p;
+      for(i = 0 ; i < 5 ; i++) {
+        c = *q++;
+        for(k = 0x80 ; k ; k>>=1) {
+          if(c & k) {  
+            *s++ = '#' ;
+          } else { 
+            *s++ = ' ';
+          }
+        }
+        c = *q++;
+        for(k = 0x80 ; k ; k>>=1) {
+          if(c & k) {  
+            *s++ = '#' ;
+          } else { 
+            *s++ = ' ';
+          }
+        }
+        q += 6;
+      }
+      p += 160;
+    }
+    break;
+  case 1:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      q = p;
+      for(i= 0 ; i < 5 ; i++) {
+        c = *q++;
+        for(k = 0x80 ; k ; k>>=1) {
+          if(c & k) {  
+            *s++ = '#' ;
+          } else { 
+            *s++ = ' ';
+          }
+        }
+        c = *q++;
+        for(k = 0x80 ; k ; k>>=1) {
+          if(c & k) {  
+            *s++ = '#' ;
+          } else { 
+            *s++ = ' ';
+          }
+        }
+        q += 2;
+      }
+      p += 160;
+    }
+    break;
+  case 2:
+    p = vbase;
+    for(j = 0 ; j < 25 ; j++) {
+      q = p;
+      for(i= 0 ; i < 10 ; i++) {
+        c = *q++;
+        for(k = 0x80 ; k ; k>>=1) {
+          if(c & k) {  
+            *s++ = '#' ;
+          } else { 
+            *s++ = ' ';
+          }
+        }
+      }
+      p += 80;
+    }
+    break;
+  default:
+    break;
+  }
+}

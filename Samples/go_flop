@@ -1,0 +1,59 @@
+#!/bin/sh
+
+#
+# run the TOS using a floppy image as drive A, and no cartridge
+# the floppy is made on the fly from files contained in FS.
+#
+
+# provide the path to a TOS image :
+TOS=emutos.img
+
+
+HERE=`pwd`
+
+# setup a temporary disk name and mtools configuration
+#
+TMPDISK=/tmp/disk$$
+TMPMTOOLSRC=/tmp/mtoolsrc$$
+export MTOOLSRC=$TMPMTOOLSRC
+cat <<EOT >$MTOOLSRC
+MTOOLS_NO_VFAT=1
+MTOOLS_SKIP_CHECK=1
+drive t: file="$TMPDISK"
+EOT
+
+# create the disk
+#
+dd if=/dev/zero of=$TMPDISK bs=1024 count=720
+mformat -t 80 -h 2 -n 9 t:
+
+# create folders and copy files in the floppy.
+# Note: the uppercase are here to ensure mtools does not
+# use vfat.
+#
+mmd t:AUTO
+mcopy FS/auto/command.prg t:AUTO/COMMAND.PRG
+# copy other files ...
+#
+
+rm -f $TMPMTOOLSRC
+
+
+STONCRC=/tmp/stoncrc$$
+rm -f $STONCRC
+cat <<EOT >$STONCRC
+screen mono
+disk a: $TMPDISK
+log file $HERE/log
+. uskbd.txt
+show ui
+show screen
+loadtos $TOS
+go
+EOT
+
+stonc -f $STONCRC 
+rm -f $STONCRC
+rm -f $TMPDISK
+
+

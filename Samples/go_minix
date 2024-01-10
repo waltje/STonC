@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#
+# my setup file to run minix.
+# a: the minix boot disk
+# b: the minix root disk
+# hd 0 0: the harddisk image, containing minix partitions.
+# tape 0 1: a pseudo hard disk used as a tar file to
+#           easily transfer files into and out of minix.
+#
+
+HERE=`pwd`
+DATA=$HERE/Data
+TOS=../nulltos.img
+
+TMPRC=/tmp/stoncrc$$
+
+cat <<EOT >$TMPRC
+screen mono
+disk a: $DATA/boot
+disk b: $DATA/root
+hd 0 0 $DATA/hd.img
+tape 0 1 $DATA/transfer.tar
+. uskbd.txt
+log file $HERE/log
+loadtos $TOS
+show screen
+go
+EOT
+
+stonc -f $TMPRC
+rm $TMPRC
+
+
+

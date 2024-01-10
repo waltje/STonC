@@ -1,0 +1,17 @@
+#
+# This is the default stonc configuration file, which 
+# will be run at startup unless option -n is given.
+#
+
+# monochrome screen by default
+screen mono
+
+# default keyboard and fonts
+include $STONCDIR/uskbd.txt
+loadfont $STONCDIR/stoncfnt.txt
+
+# default tos is nulltos
+loadtos $STONCDIR/nulltos.img
+
+
+

@@ -1,0 +1,48 @@
+This is STonC, a port of STonX to curses.
+
+What is it?
+===========
+
+a port of STonX to curses, with enhancements.
+
+STonC or STonX?
+===============
+
+In the future it may well be that STonC and STonX merge together. 
+Until this happens, if you don't know whether to use on or the other, 
+consider this:
+
+STonX features not present in STonC are (at the time of writing)
+- Xlib graphical display, with a speedy native xlib-vdi
+- sound support
+- experimental joystick support
+
+STonC features not present in STonX are
+- terminal text-only screen rendering allowing copy and paste
+- more accurate hardware emulation (mfp)
+- serial vt100-like terminal
+- dma hard disk emulation
+- some run-time configurability (eject floppies, ...) 
+
+In short, STonC was targetted at running Minix (requiring more
+hardware than supplied by STonX) with some windows portability
+(hence the curses port that was more simple to handle for me than
+a full-fledge graphical environment)
+
+Documentation
+=============
+
+read the INSTALL file for installation instructions
+read the MANUAL for (some) documentation
+There is also additional info on how to install Minix or
+MiNT in STonC.
+
+Future work
+===========
+
+Potential future directions could be:
+- support for faster CPU emulation.
+- experiment with other toolkits like the allegro library, or GTK+.
+- merge back into STonX.
+
+

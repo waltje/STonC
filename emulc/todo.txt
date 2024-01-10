@@ -1,0 +1,88 @@
+TODO list for EmulC
+
++ bold, etc in emulc.
+
++ licence on top of files
+
+- autoconf ?
+
+- other toolkits than curses. study slang, GTK+, allegro ?
+
+- resize windows. catch signals. ... see how slang does it.
+
+- resize windows : generate events and call clients.
+
+- bigger windows, ability to scroll up and down with page-up/down, like 
+  xterm.
+
+- ability to handle graphical windows (like the X window in STonX) ... 
+  need to handle iconifying, refreshing rate, ...
+
+- add timer option for vtime. investigate when a timer can be used.
+  (unfortunately, ncurses reserves one timer, in an undocumented manner,
+  for recognizing escape sequences. This is one reason to choose slang.)
+
+- find a way of maintaining the configuration options (time vs
+  gettimeofday, ...)
+
++ Take care of the actual size of the screen. The most simple way is :
+  fail when the actual size of the screen is less than 80x25.
+
++ modified attribute rendering under pdcurses + Win32 console 
+  use command "attr" under dummy.exe to see the results.
+  use command "echo ..." to experiment by hand. 
+
++ added clock() as a way of knowing the time.
+
++ in vtime, removed f2=.000001 that was here as a temporary hack.
+
+- experiment multiple emulation terminals. 
+
+- allow funny input keys by textual description.
+
+- allow more keys to be entered. (all function keys work under pdcurses,
+  some trouble with xterm to be solved under linux).
+
++ allow 8 bit input and output.
+
+- allow 8 bit input and output based on ISO latin 1.
+
++ have both backspace and delete work.
+  (backspace should generate ^H, and delete \177)
+
++ BUG: no refresh() after escape sequences.
+
++ document escape sequences. (done in emulc : see termcap.txt)
+
+- add more escape sequences and document them based on xterm.seq and
+  vt100.txt
+
+- test random characters on screen (it dumps core currently)
+
++ bug ecterm when running frotz rogue at home: t->row = -65504.
+  (occurs when writing \033[0;32H)
+
++ readline: file completion done but not very well implemented (could
+  easily SIGSEGV)
+
+- readline : multiple line
+
+- readline, better string management.
+
+- readline and DOS paths (?)
+
+- variables in ui and rline
+
+- get ui from .. and call it 'shell'
+
+- modify vtime to deal with other CPU cores.
+
+- add more function keys. 
+
+- tell GCC that ec_fatal does not return, and that ec_stderr has 
+  printf semantics.
+
+- add a pager like more.
+
+--end of file
+

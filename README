@@ -1,0 +1,13 @@
+This is STonC, a port of STonX to Curses.
+
+The STonC home page is located at
+
+  http://lvogel.free.fr/stonc.htm
+
+STonC was written by Laurent Vogel <lvl2@club-internet.fr>
+
+All documentation is found in doc/
+
+Feel free to send mail is some documentation is unclear, or for questions
+relative to STonC development.
+

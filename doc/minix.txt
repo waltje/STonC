@@ -1,0 +1,454 @@
+minix.txt - Miscellaneous notes about running Atari Minix on STonC
+
+| updated following user feedback on 2002-12-16 - changes since last version 
+| are marked with vertical bars.
+
+Installing
+==========
+
+Obtaining the floppy images
+---------------------------
+
+Download the floppy images from your favorite Minix 1.5 mirror.
+
+After downloading you should have ten files named DISK00 to DISK09, each of 
+size 720k. The files are images of double-sided floppies, except DISK01 and 
+DISK02 which are, unfortunately, single-sided floppies archived as if they 
+were double-sided (which means, null tracks are interweaved with the valid 
+tracks). To convert DISK01 and DISK02 to proper 360k single-sided disk image, 
+use the tool D2S supplied (in tools/d2s.c), as indicated below:
+
+  gcc -o d2s tools/d2s.c
+  ./d2s DISK01 
+  mv DISK01.out BOOT
+  ./d2s DISK02 
+  mv DISK02.out ROOT
+  
+From now on, I will refer to BOOT and ROOT (instead of DISK01 and DISK02) to 
+mention the correct, 360k, disk images.
+
+Note: You will probably not need DISK00 (the TOS disk). The only 'useful' tool 
+in it is FIXKEYS.PRG (to change the keyboard tables of the BOOT floppy), but 
+STonC comes with US keyboard by default, and so does Minix, so there is 
+nothing to change here (even if you're using a TOS image with a non-US 
+keyboard).
+
+Obtaining the documentation
+---------------------------
+
+Selected parts of the original Minix 1.5 Reference manual can be found on 
+internet. I got my copy from
+
+  http://ftp.mayn.de/pub/minix/MIRROR.minix1/refman.1.5/
+  
+but other mirrors can probably be found by searching for 'intro.nrf'
+on the Internet.
+
+The documentation is in nroff format, and can be converted into
+postscript:
+
+  tbl intro.nrf | groff > intro.ps
+
+and from postscript to PDF:
+ 
+  ps2pdf intro.ps
+
+PDF versions of the chapters 1 (Intro), 5 (Minix on the Macintosh) and 
+8 (recompiling) are available for download from the MacMinix page at
+
+  http://www.pliner.com/macminix/
+
+| Additionnally a PDF version of chapter 3 (Minix on the Atari ST) can be
+| found at my web page at:
+|
+|   http://lvogel.free.fr/minix.htm
+
+
+Running Minix
+-------------
+
+The standard procedure described by the documentation is:
+
+  insert BOOT as disk a:
+  power the machine on
+  the BOOT floppy is read and the Minix kernel is loaded, then started.
+  The following message is printed:
+
+    Booting MINIX 1.5.  Copyright 1991 Prentice-Hall, Inc.
+    Insert ROOT diskette and hit RETURN (or specify bootdev)
+
+  at this stage, eject BOOT and insert ROOT in a:
+  hit <return>
+  the kernel loads the initial ramdisk image from ROOT.
+  when prompted, eject ROOT and insert DISK03 in a: (the usr/ disk)
+
+in STonC terms, this requires actually to do (omitting any additional
+configuration, such as the location of your TOS image, the type of 
+screen, ...)
+
+  stonc> disk a: BOOT
+  stonc> go
+  when prompted, go back to the STonC shell (type <magic>-c) and do
+  stonc> eject a:
+  stonc> disk a: ROOT
+  then go to the Atari screen (type <magic>-a) and type <return>
+  then, when prompted, again
+  <magic>-c
+  stonc> eject a:
+  stonc> disk a: DISK03
+  <magic>-a
+  <return>
+
+A quicker procedure uses the drive B: to hold the root image
+
+  insert BOOT as disk a:
+  insert ROOT as disk a:
+  power the machine on
+  the BOOT floppy is read and the Minix kernel is loaded, then started.
+  when prompted, type 2,1<return> (this is the device numbers of drive B)
+  ...
+
+But you will still have to painfully insert and eject disks.
+
+Installing the hard disk
+------------------------
+
+STonC emulates the kind of ACSI hard disks supported by Minix.
+
+The tool mkdisk is used to create a hard disk image. A hard disk image is a
+file made of a boot sector and 1 to 4 partitions. The boot sector holds the
+partition table (sizes and types). As an example, choose a partition scheme 
+like:
+
+  /usr    is  partition 1  size   15 Mb 
+  /home   is  partition 2  size   10 Mb 
+  /root   is  partition 3  size  720 kb
+          no  partition 4 
+
+To create such a hard disk image file HD, do:
+
+  gcc -o mkdisk Tools/mkdisk.c
+  ./mkdisk -o HD 15M 10M 720k
+
+The following diagnosis messages are printed:
+
+|   di.part[0].start = 2
+|   di.part[0].size = 30000
+|   di.part[1].start = 30002
+|   di.part[1].size = 20000
+|   di.part[2].start = 50002
+|   di.part[2].size = 1440
+|   di.part[3].start = 52442
+|   di.part[3].size = 0
+|
+| the numbers printed correspond to numbers of sectors, each sector being
+| 512 bytes by default on an ACSI hard disk.
+
+You should keep note of these values as they can be helpful later if
+you want to manipulate your partitions individually. For instance, the
+following command saves partition 2 into file PART2:
+
+(DANGER)  dd if=HD of=PART2 seek=15002 count=10000 bs=1024
+
+and this does the reverse (replaces contents of partition 2 with that of
+file PART2):
+
+(DANGER)  dd if=PART2 of=HD skip=15002 count=10000 bs=1024 conv=notrunc
+
+  DANGER   a simple typo in those commands can 
+  ======   erase your entire hard disk image.
+
+Even though such manipulations are possible, do not create too small
+partitions at first, because it can be quite painful to recreate a new
+harddisk with bigger partitions if the first ones are too small.
+
+Then use the procedure described in the Minix Documentation (chapter 3).
+
+When this is done, you only need to do this to boot minix on the hard
+disk:
+
+  declare HD as disk 0 of controller 0 for STonC
+  insert disk BOOT in a:
+  start the atari
+  when prompted to insert ROOT disk, simply hit <return>
+  Minix will then load the ROOT from the device 3,3 (that is,
+  partition 3) and the file /etc/rc recently modified in this partition
+  3 will do the rest of the job.
+
+
+Configuring
+===========
+
+Real time clock
+---------------
+
+STonC emulates a MegaST RTC, so you can follow the relevant section of 
+chapter 3, and replace in /etc/rc the 
+
+  /usr/bin/date -q
+
+by something like
+
+  /usr/bin/megartc
+  
+
+
+Using the serial console
+------------------------
+
+Activate it by ensuring that file /etc/ttys contains:
+
+  100
+  1c1
+
+You can then use it by switching to STonC terminal 'b' (type <magic>-b)
+instead of terminal 'a'. 
+
+as always, do not edit the file /etc/ttys directly (because it is in
+a RAM disk and the changes won't be saved) but instead do something like
+
+  (login as root) 
+  mount /dev/hd3 /mnt
+  (edit file /mnt/etc/ttys)
+  umount /dev/hd3
+  (logout, reboot)
+
+Adding a home partition and users
+---------------------------------
+
+You need to create a filesystem on the partition using mkfs, then
+it is a simple matter of creating the mountpoint, and editing 
+some files in /etc:
+
+  (login as root) 
+  mkfs /dev/hd2
+  mount /dev/hd3 /mnt
+  mkdir /mnt/home
+  (edit file /mnt/etc/rc, adding a line "/etc/mount /dev/hd2 /home")
+  (edit file /mnt/etc/passwd to add user <user>)
+  (optionally edit file /mnt/etc/group)
+  umount /dev/hd3
+  (logout, reboot)
+  (login as root)
+  mkdir /home/<user>
+  chown <user> /home/<user>
+
+The /etc/profile
+----------------
+
+Here is a copy of my /etc/profile:
+
+  #
+  MANPATH=/usr/local/man/$MANPATH
+  export MANPATH
+
+  PATH=$PATH:/usr/local/bin
+  if test $USER = root ; then
+    PATH=/etc:$PATH
+  fi
+  export PATH
+
+  if test -t 1 ; then
+    fortune
+  fi
+
+It declares that man pages are found in /usr/local/man, that 
+there are programs in /usr/local/bin, the priviledged user 
+also lauches programs from /etc, and last if the shell is
+launched from a terminal a fortune cookie is printed.
+
+
+STonC-specific tips
+===================
+
+transfering files
+-----------------
+
+Moving files between the Minix world and the outside world can be
+done in various ways:
+- using floppies in FAT format (MSDOS format - use 'tos' utility 
+  in Minix, and the 'mtools' package outside)
+- using floppies, keeping the bootsector and having the rest in 
+  TAR format (the booksector has to kept to tell STOnC the 
+  floppy geopetry)
+- same as above, but using hard disk partitions
+- same as above, but using whole hard disks
+STonC provides a way to automate this using a special kind of hard disk
+image, to serve as a TAR file.
+
+first, declare that a specific file transfer.tar is to serve to transfer
+file to/from the Minix world. declare transfer.tar as being a 
+'tape'-like DMA device:
+
+  stonc> tape 0 1 transfer.tar
+
+then, to copy file from the minix side to the outside world, do
+
+  - archive the files into transfer.tar
+  - from inside Minix, de-tar the device /dev/st0
+
+files Tools/stget, stput, mx_stget and mx_stput serve this purpose.
+(you still need to edit them to fix the location of your transfer.tar
+file)
+
+use stget,stput in the outside world;
+copy mx_stget, mx_stput inside Minix and rename them stget, stput
+to use in the Minix World. You also need to create the device
+inode /dev/st0 by doing (as root):
+
+  mount /dev/hd3 /mnt
+  cd /mnt/dev
+  mknod st0 b 3 13 0
+  chmod 666 st0
+  cd /
+  umount /dev/hd3
+  
+then copying files is as simple as: 
+
+  stput <files>    (from one side)
+  stget            (from the other side)
+
+in both directions.
+
+note: you might need to recompile Minix after changing
+/usr/include/minix/config.h to set the NR_DRIVES parameter to the
+following value:
+
+  /* define the number of hard disk drives on your system */
+  /* (assuming 2 drives/controller) */
+  #define NR_DRIVES          2    /* typically 0 or 1 */
+  
+if you cannot recompile Minix, you can adapt the scheme to use
+one of the hard disk image partition, or a floppy, ...
+
+Using terminals
+---------------
+
+As the characters drawn on STonC terminal 'a' come from a pseudo-OCR 
+engine, it is not possible to scroll the window up to read previous
+lines. However in most implementations it is possible to read the
+'previous' lines by scrolling up the terminal 'b'.
+
+TOS images
+==========
+
+The following TOS images are suitable for running Minix with STonC:
+
+- copyrighted TOS version 1.0, 1.2, 1.4, 2.05, 2.06 (any country)
+
+- NullTOS - NullTOS is my own little boot-loader that provides just 
+  enough TOS support to let Minix boot; NullTOS is provided with 
+  STonC, and is GPL (I can provide the source code if anybody is 
+  interested) but development is stopped on NullTOS since the 
+  EmuTOS project started.
+
+- EmuTOS, recent CVS versions (EmuTOS is a GPL-covered TOS 
+  implementation for emulators, see http://emutos.sourceforge.net)
+
+the STonX cartridge is not needed to run Minix.
+
+Using Minix
+===========
+
+ANSI C compiler
+---------------
+
+The standard Minix compiler found on DISK06 is the ACK (Amsterdam
+Compiler Toolkit) C compiler and only understands obsolete K&R 
+dialect. Options to compile modern software on Minix are:
+
+- convert it back to K&R C (only feasible if the amount of code
+  is very small)
+  
+- use gcc under Minix (pre-compiled gcc 1.3 can be found on the net,
+  but beware: gcc is quite slow and very memory-hungry)
+  
+- use C68. An alternate, almost-ANSI, free C compiler, downloadable
+  from:
+  
+    http://www.itimpi.freeserve.co.uk/minix68k.htm
+  
+  C68 is my favorite because it is reasonably small and can compile
+  itself in less than 4 MB RAM (compare with gcc !). However, to 
+  quote the URL above, "Note that you cannot use the supplied ACK 
+  compiler to build C68 directly". I can provide, if requested, a
+  ready to use binary C68 compiler (you can also use it to bootstrap 
+  your C68 compiler if you wish). My C68 binary was obtained in three 
+  steps by compiling C68 using plain gcc on a PC, then compiling C68 
+  using this C68 cross-compiler, assembling the result in Minix, and 
+  finally recompiling c68 using the result of the second stage!
+  
+- use c68 + GNU binutils as a cross-compiler (the binutils create
+  executables in Gemdos .prg format, but I can provide a
+  tool to convert from .prg format to a.out format)
+  
+- use the cross-mint tools (gcc + binutils configured as a 
+  cross-compiler for Atari MiNT) plus the same .prg to a.out tool.
+
+
+GNU ports
+---------
+
+back in 1993 (?) some guys tried to submit extensions to Minix, and
+in particular some development tools such as make, diff, gcc, 
+binutils. They can still be found on the internet at URL like
+
+  ftp://ftp.sunsite.org.uk/Mirrors/atari.archive.umich.edu/Gnustuff
+
+(or if this one is not valid anymore, by looking for 'Gnustuff')
+
+
+My own additions to Minix
+-------------------------
+
+(The following tools/hacks are not packaged in neat bundles, 
+but could be made available if requested)
+
+- I modified the cc driver to drive the C68 compiler, and I can 
+  provide a C68 executable
+
+- I've managed to compile a stripped down nroff clone (the hard part
+  was to do without floating point arithmetic) to allow man to 
+  display the Minix 2.0 man pages
+  
+- I've written some tools to convert executable formats between
+  minix a.out ang GEMDOS .prg formats, so that it is possible
+  to use almost out-of-the box Atari GEMDOS cross-compilers to 
+  compile Minix programs, and also it is possible to compile
+  GEMDOS programs from Minix
+    
+- I've added readline-like input to the minix shell (command line
+  editing, and automatic filename completion) - works nice, only 
+  bug is that sometimes garbage is printed the first time one
+  asks to filename completion, but it hasn't crashed since I've been 
+  using it
+  
+- for some software I had to add 32bit-int implementation of library
+  functions like malloc()
+
+- I'm occasionally working on an optimised frotz port to minix (frotz 
+  is a Z-machine interpreter, to play text-mode adventure games)
+
+
+Other notes
+-----------
+
+I still use MacMinix on my Macintosh PowerBook (a 1992 portable machine 
+with 80 MB hard disk, 8 MB RAM). I even used MacMinix once to rescue 
+files from an old powerbook whose screen had blown up (by booting Minix,
+and logging via the serial line).
+
+I also used Atari Minix to compile various 68k software (before the cross-
+mint utilities became available, at the time when setting up a cross-
+compiler using GNU tools was pretty much a matter of faith).
+
+However the only time I did run Minix on a real Atari (and not on an 
+emulator) was when I did a sector dump of the my MegaST hard disk,
+using the following minix tools:
+
+  sh, expr, dd, sum, test, tos, echo
+
+(I dumped the 50MB hard disk by chunks of 300k, on MSDOS-formatted
+720k floppies, along with a text file containing the cksum, and checked
+in the Linux box at the other side that the cksum was correct.)
+

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# stput : send files in a way suitable for stget to get them
+#
+# stget v2.0 tars files to a tape image
+
+if test "x$1" = "x-v" ; then
+  echo stput version 2.0
+  exit 0
+fi
+
+tar cvf /home/laurent/Atari/Data/st0.tar $* 
+

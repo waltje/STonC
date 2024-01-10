@@ -1,0 +1,18 @@
+debug switches are currently scattered in various files.
+Here is a quick list of some of them.
+
+stonxcpu/cpu.c:
+PCLOG - dump all PC locations in a big file
+JMPLOG - display pc location when the pc jumps more than 10 bytes at a time
+
+stonxcpu/cpubis.c:
+uncomment debug code to display more info when exceptions are triggered
+
+machine/syscalls.h:
+TRACE_SYSCALLS - display calls to BIOS and GEMDOS functions with arguments
+
+That's it for now. Eventually it should be possible to control more of these
+options at runtime... but that will have to wait.
+
+
+

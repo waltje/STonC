@@ -1,0 +1,32 @@
+#!/bin/sh
+
+
+# this sample script runs a special build (text-only version) of 
+# a recent CVS version (2004-01-07) of EmuTOS directly. 
+#
+# This special build of EmuTOS was compiled with the following commands:
+#   echo "#define TIMEOUT_ON_BOOT 0" > localconf.h
+#   make WITH_AES=0 UNIQUE=us emutos2.img
+#
+# Emutos is a free TOS clone covered by the GPL. For more info
+# refer to the emutos web site at:
+#   http://emutos.sf.net
+#
+
+HERE=`pwd`
+EMUTOS=../data
+STONC=..
+
+STONCRC=/tmp/stoncrc$$
+rm -f $STONCRC
+cat <<EOT >$STONCRC
+screen mono
+log file $HERE/log
+loadtos $EMUTOS/emutos2.img
+go
+EOT
+
+$STONC/stonc -f $STONCRC 
+
+rm $STONCRC
+

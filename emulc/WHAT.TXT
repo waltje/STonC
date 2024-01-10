@@ -1,0 +1,67 @@
+EmulC : Emulator framework for Character (tty-like) interface.
+a framework for developing emulators using curses-like interface only,
+intended to be as portable as possible, requiring little more than just the 
+plain ANSI C library, and curses.
+
+Architecture :
+The emulator emulates one machine and several text terminals plugged on it.
+Virtual terminals are emulated : one for each emulated terminal, plus one
+for the user interface (the emulator monitor). On one end, virtual terminals 
+are able to print characters one at a time, or send input character to the
+emulated machine. In fact the terminals are not able to call directly the
+emulator, so the emlated machine must check regularly if a new key has been 
+hit on the terminal.
+
+  virtual terminal methods:
+  - void te_output_char(terminal, char);
+  - int te_get_char(terminal);
+
+On the other hand, terminals emulate vt100 like terminal, and must display
+characters on the screen. This part is implementation dependant, and 
+typically it can be done using curses or other libraries.
+
+The user interface (ui) will allow the user to interactively set parameters
+before and while running the machine, like inserting or removing floppies for
+instance. This interaction with the user is done through commands in the
+ui virtual terminal. 
+
+The core part of an emulator is the cpu emulation. EmulC does not contain
+cpu emulation as it is specific to the emulated machine. However Emulc does
+make the assumption that there is some kind of cpu emulation which emulates
+machine instruction one at a time. Another assumption is that this process
+burns the major part of the (real) execution time for the emulator.
+
+Given these assumptions, EmulC maintains a virtual time based on the number
+of machine instructions emulated and on the real time. This virtual time
+can then be used throughout the emulator to emulate hardware timings or
+to check the (real) keyboard regularly. However the virtual time is only
+available while emulating (and not before launching the emulator, or when the
+cpu is halted in a debugger, for intance).
+
+For this reason, the te_get_char routine will work differently depending
+on the fact that the emulator is running or not.
+if the emulator is not running, then
+- only the ui virtual terminal will be active ; 
+- te_get_char will block until a char comes (in a event-based gui 
+implementation this means that there must be an event loop within 
+te_get_char) 
+If the emulator is running, then
+- the ui virtual terminal will not be active ;
+- the emulation manager will emulate during a small amount of time, then
+check the keyboard, and if a new key has been hit put it in the buffer for 
+the active virtual terminal and signal somehow that the key is available ;
+- te_get_char will return the oldest key in the terminal's buffer, or -1 if
+the buffer is empty: te_get_char will not block.
+
+only one virtual terminal is active at a given time. a magic key allows 
+switching between virtual terminals.
+
+
+emulc comes with a dummy 'machine emulator' which does the following:
+- it loops a small number of times for each 'instruction', counting
+instructions;
+- it regularly ckecks for keys, and displays them in the upper part of the
+terminal;
+- every second it shows the virtual time and the number of intructions per 
+second.
+

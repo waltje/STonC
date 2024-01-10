@@ -1,0 +1,155 @@
+
+Version 0.8.1
+-------------
+
+2004-01-07
+- ui.c - added \n at the end of some error messages
+- cleaned remaining occurrences of fprintf(stderr, ...)
+- io.c - removed old crash() function
+- midi.c - removed old STonX stuff, waiting for new implementation
+- added AUTHORS file, updated doc.
+- updated maintainer's email address in documentation and at init
+- doc/license.txt changed to COPYING in file headers
+- started reworking some documentation
+- syscalls.c - pc location reported
+- tgz archive named automatically according to the most recent
+  changelog date or version
+- boss.c - ocr screen now refreshed slightly faster
+- added emutos image and sample script, to simplify basic testing
+
+2003-04-14
+- version derived from the changelog
+- syscalls.c - added names of GEMDOS syscalls
+
+2003-04-11
+- Makefile - gcc3, more warnings
+- data/stoncfnt.txt - 8x8 font no longer duplicated
+- ocr.c - quick hack to avoid reading outside memory; warnings removed.
+- hdc.c - xstrdup fixed
+- hash.c - added call to xstrdup
+- assert - no longer defined if NDEBUG set; ISO C warning removed
+- stonxcpu/gen.c - less verbose
+- removed a number of warnings
+- util directory added, xstrdup moved there
+- acia.c - acias IRQ now inited (bug caused infinite loop when booting)
+
+2003-04-03
+- Makefile - indent added
+- misc. private notes, scripts, ... moved in Work directory
+
+2003-02-09
+- emulc - added ec_vstderr()
+- added natfeats
+
+2002-12-16
+- changelog.txt todo.txt - reformatted; closed todo items moved here;
+  todo items still open classified in categories
+- cpu.c - memory at addresses 0-7 now mirrored from the ROM
+- iotab.c - some megartc registers were missing
+- *.* - started adding copyright statements on top of files (not done yet)
+- data/uskbd.txt - fixed escape key
+- ecterm.c - set terminal mode to raw in order to allow ^C and others
+- *.c - started removing some warnings and some dead code from STonX
+- Makefile - cleaned a little bit
+- mem.c - removed fix_screen stuff (was used by STonX to implement a big
+  screen) because I don't want to cheat with TOS the way STonX did
+- removed Oldconf - if needed it will be easier to take the configure stuff
+  from a newer STonX anyway
+
+2002-10-15
+- iotab.c - bug solved (function numbers were bigger than 254)
+- changelog.txt - reformated in a more compact way
+
+2002-09-13
+- iotab.c cpu.c - more maintainable replacement of iotab[12].c
+- cpubis.c - cleaned V68k stuff (disabled 71xx illegal opcodes)
+
+2002-09-03
+- cpu.c - added LAZY_FLAG switch, set it to 0 (for 68k debuggers)
+- changelog.txt - created and filled with some retrospective historic changes
+
+Version 0.8.0
+-------------
+
+2001-12-01
+- recreated a directory structure and Makefile similar to EmuTOS
+- stripped down debug.c
+- added a Samples folder with examples of scripts
+- named it version 0.8.0
+- touched some doc
+- removed all warnings
+
+2001-11-24
+- cpu.c - solved bus error bug when reading long at address 0x7FE
+
+2001-10-16
+- both TOS1 and TOS2 supported
+
+2001-04-19
+- rline.c: fixed completion for files in the current directory
+- boss.c: fixed initial prompt appearance
+- ocr.c: use command loadfont to specify the location of the 
+  stoncfnt.txt file
+- ec_util.c: removed stderr output
+
+2001-04-10
+- doc/ - updated some documentation
+- mem.h - got version from STonX-0.6.7.3 (compiles on gcc 2.95.2)
+- tos.img - got a more recent nulltos
+
+2001-04-02
+- ui.[ch] - added variables
+- boss.c rline.c - fixed prompt redraw
+- ui.c - added newline after echo
+
+2001-03-31
+- usart.[ch] - works now with the new timer D interface
+
+2001-01-14
+- cpu.c - BCD functions completely rewritten. I checked the 
+  256*256*2 combinations for a, b, and x on a real 68020. The new 
+  implementation is accurate except for the N bit
+
+Earlier changes
+---------------
+
+The date of earlier changes was not recorded; here is a selection from
+the old todo.txt (recorded on 2002-12-16):
+- added, tested binary hash
+- emulated the video screen by poor man's OCR techniques
+- fixed: dir c: crashes but not dir c:\ in gemdos.c
+- fixed: several Fwrite() crash, using gemdos.c or not. (was due to short
+  stack)
+- ocr: added a better font bitmap format
+- ocr: the font file is now a parameter
+- backspace did not work correctly in editline
+- the ui prompt did not appear after commands
+- understood why the keyboard is dead after reset
+  - checked that the ikbd.c and stkbd.c work after reset
+  - changed a bug in mfp.c set_ddr(), which solves the problem for 
+    nulltos but now the TOS does not boot. (screen rez problem !)
+  - changed STORE_B_ff8260 effect on bit 7 of gpip in io.c, now it works
+- added a command to change the monitor type (mono/color) in ui
+- initial copyright message appears on the ui
+- the screen is not scanned unless the screen terminal is selected
+- acia.c; ikbd.c is connected to an actual ACIA allowing future midi 
+  emulation
+- ikdb emulated from curses (need to know the actual keyboard layout to 
+  convert between ascii characters and scancodes, including modifiers)
+- help in ui
+- usart and timer D: alarm set every byte, not every bit
+- error messages displayed in the ui terminal always
+- simple configuration variables in the embedded shell
+- multiple DMA controllers, multiple hard disks
+- converted fdc and hdc emulation to stdio streams. Done, keeping
+  the unistd alternative for fdc
+- replaced gettimeofday() by time()
+- reset did not work 
+- longjmp/setjmp are used to return from bus and address errors; previously 
+  execute() nested, which caused trouble when going back to ui
+- removed MFP debug messages about timers
+- moved all old autoconf stuff in Oldconf/, and cleaned the Makefile for 
+  two configs (namely linux x86 and cygwin)
+- merged EmulC in the directory structure
+  
+

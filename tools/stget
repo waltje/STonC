@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# stget : retrieve files sent by stput.
+#
+# stget v2.0 untars files from a tape image
+
+if test "x$1" = "x-v" ; then
+  echo stget version 2.0
+  exit 0
+fi
+
+tar xvf /home/laurent/Atari/Data/st0.tar
+
+
+

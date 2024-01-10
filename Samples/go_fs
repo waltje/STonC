@@ -1,0 +1,30 @@
+#!/bin/sh
+
+#
+# run the TOS using the host filesystem FS as drive C
+#
+
+# provide the path to a TOS image :
+TOS=emutos.img
+
+
+HERE=`pwd`
+
+cat <<EOT >/tmp/stoncrc
+screen mono
+fs c: $HERE/FS
+
+. uskbd.txt
+log file $HERE/log
+show ui
+show screen
+loadcart ../cartridge.img
+loadtos $TOS
+go
+EOT
+
+stonc -f /tmp/stoncrc 
+
+
+
+

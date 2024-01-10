@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#
+# my setup file to run MiNT.
+# C D E : partition images (NOT Whole disk) used thanks to
+#         native BIOS-level disk, but formatted in ext2fs.
+# F:      the native filesystem access
+#
+
+
+TOS=emutos.img
+HERE=`pwd`
+
+STONCRC=/tmp/stoncrc$$
+rm -f $STONCRC
+cat <<EOT >$STONCRC
+screen mono
+disk c: $HERE/Data/diskc
+disk d: $HERE/Data/diskd
+disk e: $HERE/Data/diske
+fs f: $HERE/Fs
+log file $HERE/log
+. uskbd.txt
+show ui
+show screen
+loadcart cartridge.img
+loadtos $TOS
+go
+EOT
+
+stonc -f $STONCRC
+rm $STONCRC
+
+
+

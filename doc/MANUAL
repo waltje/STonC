@@ -1,0 +1,272 @@
+Some STonC documentation
+
+table of contents :
+a) The STonC user interface
+b) Using STonC
+c) Notes
+
+
+The STonC user interface
+========================
+
+STonC emulates an Atari ST, with a screen, a keyboard, and a vt100
+terminal connected to the serial port. STonC also has a simple user
+interface, which is a simple shell in its own terminal. 
+
+terminals and ui
+----------------
+
+Here is a diagram of the connections behind the terminals:
+
+              key hits (scancodes)
+  terminal  ------------------------->  keyboard -------> ikbd acia 
+     A      <-------------------------   screen  <------- video mem
+              character recognition
+             
+  terminal  <------------------------> serial port <----> mfp usart
+     B        bytes (VT100 protocol)
+
+  terminal  <-----> ui shell
+     C                 \       commands and
+                        - - -> variables 
+  command file - - - - /       controlling 
+                               the emulator
+
+To represent the three terminals in a simple curses screen, only
+one terminal is active at a time. Switching between terminals is done 
+using the 'magic' key '²' (exponant 2, the small key in the left upper
+corner in a standard PC keyboard). To go to terminal A hit the magic 
+key, then the key 'a', and similarly :
+
+  magic-'a' : goes to the terminal A  (Atari keyboard and screen)
+  magic-'b' : goes to the terminal B  (serial port)
+  magic-'c' : goes to the terminal C  (ui shell)
+  magic-' ' : halts the CPU and goes to the terminal C (ui shell).
+
+other combinations of the magic key in terminal A will open 
+a small one-line window in the bottom of the screen, for the time of 
+a command. (useful for hitting special keys for instance)
+(not implemented yet).
+
+UI line editing
+---------------
+
+The user interface is a simple shell-like command interpreter.
+Commands are either entered in the terminal C, or from command files.
+A small readline clone is included in terminal C. You can use the 
+arrow keys to move right and left, and to recall previous lines.
+You can also use the following control sequences :
+  
+  control-A     go to the beginning of line
+  control-E     go to the end of the line
+  control-K     delete everything right to the cursor, inclusive.
+  tab           filename completion.
+
+The '#' character is used to comment out the rest of the line.
+
+The UI shell
+------------
+
+The shell is a simple sh-like command interpreter. A command line is
+a line containing words separated by spaces. Quoting can be used to 
+represent words containing spaces. the following are all single words:
+
+  a_word
+  0x1234
+  'quoted string'
+  "double-quoted string"
+  backslash-quoted\ string
+  
+The command is the first word in the command line. the remaining 
+words are arguments to this command. Each command expects a certain 
+number of arguments. You can have the list of all commands by using
+the command 
+
+  help
+
+and you can know the actual usage of a command exit for example by
+using the command
+ 
+  help exit
+
+Some general commands are:
+  
+  echo <args>   # prints the arguments <args>
+  exit          # quits stonc
+  quit          # same as exit
+  load <file>   # execute all commands found in file <file>
+  . <file>      # same as load <file>
+  set <name> <value>  
+                # declare variable $name to have the value <value>
+
+(commands not implemented right now:
+  ls            # list files in the current directory
+  dir           # similar to ls
+  cd <dir>      # change the current directory to <dir>
+)
+
+STonC related commands are
+  go            # launch the CPU
+  halt          # halt the CPU
+  reset         # like pushing the reset button on the Atari
+  show <term>   # show the terminal named <term>      
+  disk a: <img> # insert floppy image <img> as floppy a:
+  disk c: <img> # <img> is BIOS-level emulated disk
+  hdc <contr> <dev> <img> 
+                # use <img> ad disk image for DMA device <dev>
+                # of controller <contr>
+  
+type help for the full list of commands
+
+Variables
+---------
+
+There are really three kinds of variables.
+- environment variables, set before running stonc, like $PATH
+- stonc configuration environments, meaningful to stonc (stonc will
+  react when you change them). These always have a value.
+- user variables.
+
+You can expand the value of a variable by using the character '$'
+(dollar) in a command line followed by the name of the variable.
+You can set the value of the variable using the set command. 
+Here is an example :
+
+  stonc> set foo value
+  stonc> echo $foo
+  value
+  stonc> echo ${foo}
+  value
+  stonc> echo $foo$foo
+  valuevalue
+  stonc> set $foo bar
+  stonc> echo $value
+  bar
+  stonc> echo $foo
+  value
+  
+Easy, no ?
+There are some relations between quoting and variables. Examples:
+
+  stonc> echo "$foo" '$foo' \$foo $fo\o
+  value $foo $foo o
+
+(the last one being because the variable $fo has no value)
+
+Internal variables
+------------------
+
+Some STonC configuration is done using variables. The integer variables
+always have an integer value, and the string variable can have any value.
+Specifying a value not within the acceptable domain for a variable will 
+have no effect.
+
+Here is the list of all variables :
+(no variables right now)
+
+Using STonC
+===========
+
+
+Using TOS and CARTRIGDGE images
+-------------------------------
+
+In the past, STonX had no FDC emulation. It had to rely on a
+cartridge loaded from the BIOS in the TOS image to patch the
+trap vectors, replacing them by pointers to vectors in the
+cartridge, themselves calling native BIOS-level emulation
+via fake opcodes.
+
+Then FDC emulation was added to STonX, making possible to
+use ordinary floppy images with no cartridge. SO there are
+two options :
+
+- either use stonc as a pure-hardware emulator. load a TOS 
+  image, do not load a cartridge image, use floppy and DMA
+  hard disk images.
+
+- or, use stonc as a hardware plus software emulator, with
+  features like bios-level disks and gemdos-level file system
+  support. you need to load a TOS image plus the supplied
+  cartridge image.
+
+in the latter case you have the following additional commands :
+
+  disk c: <img>    (and also d:, e:, ...)
+declares a bios-level disk (the command must be used before 
+the TOS is booted, and a cartridge must be supplied). If the
+disk image contains a file system compatible with GEMDOS, then
+the contents will be accessible also at the gemdos level.
+(note, bios-level disks are also usable with other filesystems
+like minixfs or ext2fs by MiNT)
+
+  fs c: <dir>      (and also d:, e:, ...)
+declares a gemdos-level file-system. files in the directory <dir>
+will be seen as files (8+3 characters) from the gemdos (the 
+command must be used before the TOS is booted, and a cartridge 
+must be supplied). However such a disk will not be acessible by 
+the BIOS.
+
+It is not possible to declare a: or b: as a bios-level disk or a
+gemdos-level filesystem. It is not possible to declare the same
+disk as being both a bios-level disk and a gemdos-level file-system.
+
+Running TOS
+-----------
+
+The tricky part when using STonC is that the normal Atari desktop
+is virtually useless with no graphical screen and no mouse. The only
+way to overcome this is to use a kind of text shell launched from
+an AUTO folder. floppy autoempty.img.gz contains such a shell,
+COMMAND.TOS, renamed A:\AUTO\COMMAND.PRG.
+use commands dir, copy, md, del, from within command.tos.
+
+Exchanging files
+----------------
+
+Exchanging files between TOS and the outside world can be done
+- using mtools (see documentation on STonX home page)
+- using gemdos-level file-system and copy from command.tos.
+
+as both options are rather painful when dealing with directories, 
+I recommand first installing an archiver like tar on both sides, 
+then only move archives around.
+
+Running MiNT
+------------
+
+KGMD installs with normal procedures. What I did is :
+- create a 10 MB bios-disk image, disk_c.img
+- with mtools or gemdos-fs, copy the needed installation files on c:
+- create a 20 MB bios-disk image, disk_d.img. this will be mkfs-ed 
+  by mint, so do not put anything on it. Do NOT keep it in your 
+  .mtoolsrc !
+- launch the installation program with the following stonc setup :
+  disk a: autoempty
+  disk c: disk_c.img
+  disk d: disk_d.img
+  loadcart cartridge.img
+- ask for a minix fs on d:
+- at the end you should have a working MiNT setup.
+- you can also add a 
+  fs e: disk_e_directory
+  if you want to use gemdos-level file-system.
+
+Note:
+the STonX mintfs is not yet incorporated in STonC.
+
+Running Minix
+-------------
+
+separate document.
+
+Notes
+=====
+
+Typing magic-'c' to go back to the ui does not halt the cpu. You must
+use the 'halt' command explicitely. Then use 'go' to launch the cpu
+again.
+
+
+
+

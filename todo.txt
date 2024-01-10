@@ -1,0 +1,244 @@
+TODO list for STonC
+-------------------
+
+- create a test suite: test quasi-automatically a number of systems
+  and OSes (minix, mint, emutos, tos1, tos 2, with and without 
+  cartridge, with color or mono screen, ...)
+- replace mkdist by hdtool
+
+- package with emutos instead of nulltos ?
+- add a floppy image
+- parport
+
+(EmuTOS: no timeout when no AES)
+(EmuTOS: MIDI debug allowed only once MIDI acia inited)
+(EmuTOS: check if hard disk ok)
+
+Bugs
+----
+
+- PROF68k and PROFILE should be ...
+  generation options should go in another file;
+
+- debug/non debug cpu execute() ?
+  TRACE mode doesn't work with LAZY_FLAG
+  -> idea: report flags by temporarily altering the pc/the instruction
+  pointed to by pc, so that the next instruction leaves the loop ?
+
+- loading a bad tos file name shouldn't be fatal; loading should be 
+  made immediately.
+- OCR might read outside legal memory if vbasadr is near the end of RAM
+
+- inserting and ejecting floppies halts the machine after a while?
+  (reported by Marc, couldn't reproduce)
+
+- launching nethack and other recent TOS progs causes illegal
+  exceptions. Probably found: the HD driver is probably responsible 
+  for spoiling registers; check with a newer HD driver
+  
+General
+-------
+
+- provide a floppy autoempty
+- test BIG EmuTOS roms
+- provide other keyboards
+ 
+
+Documentation
+-------------
+
+- clean doc/ folder
+- refer to emutos in STonC documentation
+- clean bugs.txt
+
+Makefile and tools
+------------------
+
+- Makefile improvements
+- autoconf ???
+
+General coding issues
+---------------------
+
+- remove all warnings
+- move OS-dependant functions in separate files
+- indent all files
+- change IFDEFs into IFs
+- Create a debug interface in all the parts of the
+  emulator. Add the only option to debug or not debug. if debug, then 
+  add commands to select the level of debugging.
+
+C language issues
+-----------------
+
+- use vsnprintf in ec_utils
+- use strerror(errno) in ui.c
+- remove extern functions in C files
+
+
+Internal modules
+----------------
+
+- clean io.c: put parallel stuff, clock, dma in separate files ?
+- hash is ugly, rewrite it.
+- vtime: add pause()... which means, yet another offset... understand 
+  impacts to current code.
+- check all strings manipulation. get a strings lib. (esp. in 
+  rline for completion).
+- cleaner dispatching of files in folders, especially headers.
+- clean connection between devices and the MFP. between the device and
+  cpu.c. clean flags.
+
+
+Native features
+---------------
+
+- licence LGPL ?
+- check with recent spec in ARAnyM
+- mention in documentation
+
+CPU
+---
+
+- remove bigscreen stuff from mem.c
+- document CPU generation options, and say on which system which option works.
+- rewrite cpu read/writes for W and L sizes ?
+- clean CPU loop, esp. LAZY_FLAG
+- implement STOP opcode
+- clean CPU interface, use either faster CPUs or CPUs with accurate
+  cycle timings.
+- too many alarms in vtime.c when changing monitor type.
+- check emulation wrt the 68000 user manual : especially,
+  - exceptions trap, trapv, chk, divu, divs => group 2 exception,
+    trace, interrupt, privilege and illegal -> group 1,
+    reset, bus, address => group 0.
+  - priority, stack frame for bus and address, reset does not alter ccr,
+  - trace happens after the instruction if T was set before the instr.
+  + double bus error halts the cpu
+  - move ccr is not privileged ???
+  - stop must not halt stonc
+  - external reset signal also resets the peripherals, as well as the 
+    reset instruction
+- clean cpu/cpubis stuff.
+- understand fixscreen stuff in mem.c
+- make distinctions in header files between cpu stuff and glue and
+  other wiring stuff. Decouple them so that it is not necessary to
+  recompile cpu.c each time defs.h changes. (useless?)
+
+User Interface
+--------------
+
+- keyboard: change the way bind works; make magic key configurable.
+- inquire about unicode-compliant curses :-)
+- when in terminal B, then term C, hitting 'go' goes back to terminal A
+  (it should go in the latest non-C term).
+- add variable to set the logging style in emulc.
+- rline does not complete ~/ and $HOME/ prefixes. Should distinguish between 
+  the dir and the appearance of the dir; Then allow variable and tilde 
+  expansion in the dir, not altering the appearance.
+- rline swallows ../ when hitting ../<TAB>
+- term : allow more than 25 history lines in terminals. allow to 
+  scroll term windows using pgup, pgdn, or similar keys.
+- do not crash when there are less than 25 lines: scroll the atari
+  screen around.
+- missing command to reinitialize all the machine/ keyboard/ ???
+- allow to insert a small term as the last line in the current term,
+  with a separate rline. 
+- add command to hit a special key, or to hold down a special shift key.
+- allow more consoles (via MIDI, and other serial ports)
+- add commands to check the current status of disks
+- debugger in ui ? trigger exceptions in ui ?
+- add ls. implement $var/<TAB> completion in rline.
+- add help for builtin ui commands.
+- allow to script the emulator. (type strings, expect answers, 
+  wait some time, ...)
+
+
+Screen and OCR
+--------------
+
+- read .FNT fonts; provide ISO-8859-1 fonts; add an option to display
+  ISO-8859-1 fonts using curses.
+- handle unknown bitmaps. Invent a heuristics to determine if a bitmap 
+  is potentially a char or simply noise (much noise likely to be 
+  generated when the screen is scanned while scrolling). Design 
+  a user interface to handle these unknown bitmaps.
+  (via a file or interactively in a special terminal).
+- ocr: implement a fast scan that only checks some pixels per character
+  to see if they have changed. if only few chars have changed, update
+  the screen, else give up and wait till the next period for complete,
+  detailed analysis. Then call this fast scan every 1/10 second or so.
+- ocr: as a client, ocr needs to be told when the terminal is shown
+  or not. design an interface suitable also for X and other toolkits.
+- ocr/nulltos: no screen when color is not mono, with old nulltos.img
+
+Hardware
+--------
+
+- MIDI: implement and connect it to an emulc terminal
+- ACSI: only long access should be recognized
+
+- allow disks to be inserted read-only (hdc)
+
+- inserting/ejecting floppies should behave like STeem does:
+  insert read-only: 00, then 40
+  eject read-only: nothing
+  insert writeable: 00, 40, 00
+  eject writeable: 40
+
+- init_parallel(); parallel port.
+
+- use localtime() to set the time, avoiding thereby timezone offsets?
+
+- clean ikbd.c (the keymap should not be here, but in x.c instead)
+
+- fdc.c : check details, for instance the status bit wrt fdc_busy.
+  at least document what is emulated and what is not.
+
+- understand how the BIOS knows whether a color or mono screen is 
+  connected. setting screen mono gives color display with
+  nulltos ; setting screen color gives buggy color display.
+
+- can't set the clock; will have a problem after 2019.
+
+- allow dma client removal (?)
+
+- allow to specify the geometry of a floppy, not deducing 
+  it from the bootsector.
+  
+- add support for msa floppy images
+
+- timer B event count mode? is there a relationship with HBL? 
+
+Native TOS
+----------
+
+- drive_bits: should ejected media be removed from drive_bits ?
+
+- gemdos drives: should not allow to go up out of the specified
+  directory. 
+
+- gemdos dirs do not survive reset.
+
+- after accessing gemdos dirs from auto/command.prg, exit crashes stonc.
+
+- document bios native disks.
+
+- what to do with the gemdos/bios drives on reset ?
+
+- understand and document the way native.c works : 
+  - native vdi (there was a native(6) call inserted from cpu.c)
+  - native bios/gemdos : document and allow it (optional)
+  - what is gemdos_post() ???
+  - what is this funny 'lower case c' drive (cartridge), with a program
+    quit.prg in it ???
+
+Misc
+----
+
+- nulltos should be able to boot from the hard disk
+- boot minix from hard disk ?
+- nulltos should master reset then init both acias and send init string
+  to the keyboard.
+
+

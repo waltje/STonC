@@ -1,0 +1,1218 @@
+diff -ruN cvs2/Makefile hdemu2/Makefile
+--- cvs2/Makefile	Fri Dec 14 17:26:09 2001
++++ hdemu2/Makefile	Sat Jan  5 04:06:39 2002
+@@ -28,7 +28,7 @@
+ 
+ SRCS = audio.c bios.c cart.c configuration.c createBlankImage.c \
+   createDiscImage.c debug.c debugui.c dialog.c errlog.c fdc.c file.c \
+-  floppy.c gemdos.c ikbd.c int.c intercept.c joy.c keymap.c m68000.c \
++  floppy.c gemdos.c hdc.c ikbd.c int.c intercept.c joy.c keymap.c m68000.c \
+   main.c midi.c memAlloc.c memorySnapShot.c mfp.c misc.c msa.c psg.c \
+   printer.c rs232.c reset.c st.c stMemory.c screen.c screenConvert.c \
+   screenSnapShot.c sdlgui.c shortcut.c sound.c spec512.c statusBar.c timer.c \
+diff -ruN cvs2/debugui.c hdemu2/debugui.c
+--- cvs2/debugui.c	Fri Dec 14 17:26:09 2001
++++ hdemu2/debugui.c	Sun Dec 30 04:20:04 2001
+@@ -11,6 +11,7 @@
+ 
+ #include "main.h"
+ #include "configuration.h"
++#include "dialog.h"
+ #include "decode.h"
+ #include "gemdos.h"
+ #include "intercept.h"
+@@ -40,6 +41,7 @@
+ 
+ FILE *debugLogFile;
+ FILE *debug_stdout;
++extern BOOL bEnableDebug;   
+ 
+ /* convert string to lowercase */
+ void string_tolower(char *str)
+@@ -505,7 +507,8 @@
+ 	         " f [filename] - open log file, no argument closes the log file\n"
+ 	         "   Output of reg & mem dumps and disassembly will be written to the log\n"
+                  " l filename address - load a file into memory starting at address. \n"  
+-                 " s filename address length - dump length bytes from memory to a file. \n\n"  
++                 " s filename address length - dump length bytes from memory to a file. \n"  
++	         " o - disable debug mode\n\n"
+                  " q - return to emulation\n\n"
+ 	         " Adresses may be given as a range e.g. fc0000-fc0100\nAll values in hexadecimal.\n"
+                  "-----------------------------\n"  
+@@ -544,6 +547,12 @@
+     return(DEBUG_CMD);
+     break;
+ 
++  case 'o':
++    bEnableDebug = FALSE;
++    fprintf(stderr, "  Debug mode disabled.\n");
++    return(DEBUG_CMD);
++    break;
++
+   case 'd':
+     if(i < 2)  /* no arg? */
+       DebugUI_DisAsm(arg, TRUE);     /* No arg - disassemble at PC */
+@@ -625,6 +634,8 @@
+ 
+   bMemDump = FALSE;
+   disasm_addr = 0;
++
++
+   fprintf(stderr,"\nYou have entered debug mode. Type q to quit, h for help. \n------------------------------\n");
+   while(DebugUI_Getcommand() != DEBUG_QUIT);
+   if(debugLogFile != NULL) fclose(debugLogFile);
+diff -ruN cvs2/fdc.c hdemu2/fdc.c
+--- cvs2/fdc.c	Fri Dec 14 17:26:10 2001
++++ hdemu2/fdc.c	Thu Dec 20 02:34:57 2001
+@@ -15,6 +15,7 @@
+ #include "decode.h"
+ #include "dialog.h"
+ #include "fdc.h"
++#include "hdc.h"
+ #include "floppy.h"
+ #include "ikbd.h"
+ #include "m68000.h"
+@@ -24,6 +25,7 @@
+ #include "psg.h"
+ #include "stMemory.h"
+ 
++
+ /*
+   Floppy Disc Controller
+ 
+@@ -259,6 +261,10 @@
+ 
+   FDCSectorCountRegister = 0;
+   FDC_SetDMAStatus(FALSE);          /* Set no error */
++
++  HDCSectorCount = 0;
++  HDCCommand.byteCount = 0;         /* Reset HDC command status */
++  HDCCommand.returnCode = 0xFF;
+ }
+ 
+ 
+@@ -282,8 +288,12 @@
+     DMAStatus_ff8606rd |= 0x1;
+ 
+   /* Set zero sector count */
+-  if (FDCSectorCountRegister!=0)
+-    DMAStatus_ff8606rd |= 0x2;
++
++  if (DMAModeControl_ff8606wr&0x08)         /* Get which sector count? */ 
++    DMAStatus_ff8606rd |= (HDCSectorCount)?0:0x2;         /* HDC */
++  else
++    DMAStatus_ff8606rd |= (FDCSectorCountRegister)?0x2:0; /* FDC */
++  /* Perhaps the DRQ should be set here */
+ }
+ 
+ 
+@@ -1061,6 +1071,8 @@
+ */
+ void FDC_WriteDiscControllerByte(void)
+ {
++  HDC_WriteCommandPacket();           /*  Handle HDC functions */ 
++
+   /* Are we trying to set the SectorCount? */
+   if (DMAModeControl_ff8606wr&0x10)         /* Bit 4 */
+     FDC_WriteSectorCountRegister();
+@@ -1090,6 +1102,13 @@
+ */
+ void FDC_ReadDiscControllerStatusByte(void)
+ {
++  /* return the HDC status reg */
++  if(DMAModeControl_ff8606wr == 0x08A) {       /* HDC status reg selected */
++    DiscControllerByte = HDCCommand.returnCode;
++    return;
++  }
++
++  /* old FDC code */
+   switch(DMAModeControl_ff8606wr&0x6) {     /* Bits 1,2 (A1,A0) */
+     case 0x0:                               /* 0 0 - Status register */
+       DiscControllerByte = DiscControllerStatus_ff8604rd;
+diff -ruN cvs2/gemdos.c hdemu2/gemdos.c
+--- cvs2/gemdos.c	Fri Dec 14 17:26:10 2001
++++ hdemu2/gemdos.c	Sat Jan  5 03:06:57 2002
+@@ -20,6 +20,7 @@
+ #include "dialog.h"
+ #include "file.h"
+ #include "floppy.h"
++#include "hdc.h"
+ #include "gemdos.h"
+ #include "m68000.h"
+ #include "memAlloc.h"
+@@ -41,6 +42,7 @@
+ #endif
+ #include <dirent.h>               /* ..this conflicts with dirent.h definition */
+ 
++/* #define GEMDOS_VERBOSE */
+ #define ENABLE_SAVING             /* Turn on saving stuff */
+ 
+ #define INVALID_HANDLE_VALUE -1
+@@ -54,8 +56,8 @@
+ 
+ typedef struct 
+ {
+- BOOL bUsed;
+- FILE *FileHandle;
++  BOOL bUsed;
++  FILE *FileHandle;
+   char szActualName[MAX_PATH];   /* used by F_DATIME (0x57) */
+ } FILE_HANDLE;
+ 
+@@ -423,6 +425,7 @@
+   while(string[i] != '\0'){new[i] = string[i]; i++;} /* find end of string */
+   while(new[i] != '/') i--; /* find last slash */
+   new[i] = '\0';
++
+ }
+ 
+ /*-----------------------------------------------------------------------*/
+@@ -456,18 +459,32 @@
+     InternalDTAs[i].found = NULL;
+   }
+   DTAIndex = 0;
++
++  /* intialize data for harddrive emulation */
++  if(GEMDOS_EMU_ON){
++    /* remove trailing slash, if any in the directory name */
++    i=0;while(emudrives[0]->hd_emulation_dir[i]) i++;
++    if(emudrives[0]->hd_emulation_dir[i-1] == '/')
++      emudrives[0]->hd_emulation_dir[i-1] = '\0';
++    
++    /* set drive to 2 + number of ACSI partitions */
++    emudrives[0]->hd_letter = 2 + nPartitions;
++    fprintf(stderr, "Hard drive emulation, %c: <-> %s\n",
++	    emudrives[0]->hd_letter + 'A', 
++	    emudrives[0]->hd_emulation_dir);
++  }
+ }
+ 
+ /*-----------------------------------------------------------------------*/
+ /*
+   Reset GemDOS file system
+ */
+-void GemDOS_Reset(void)
++void GemDOS_Reset()
+ {
+   int i;
+ 
+-  if(emudrives != NULL){
+-    strcpy(emudrives[0]->fs_currpath,"");
++  if(GEMDOS_EMU_ON){
++    strcpy(emudrives[0]->fs_currpath,"/");
+   }
+   
+   /* Init file handles table */
+@@ -563,6 +580,7 @@
+ /*-----------------------------------------------------------------------*/
+ /*
+   Find drive letter from a filename, eg C,D... and return as drive ID(C:2, D:3...)
++  returns the current drive number if none is specified.
+ */
+ int GemDOS_FindDriveNumber(char *pszFileName)
+ {
+@@ -585,13 +603,18 @@
+ {
+   int DriveLetter;
+ 
+-  /* temporary hack, as Configureparams isn't set up yet. */
+-  DriveLetter = GemDOS_FindDriveNumber(pszFileName);
+-  if( DriveLetter >= 2 )
+-    return(DriveLetter);
+-  else
+-    return(-1);
+-  
++  /* Do we even have a hard-drive? */
++  if(GEMDOS_EMU_ON)
++    {
++      DriveLetter = GemDOS_FindDriveNumber(pszFileName);
++      /* add support for multiple drives here.. */
++      if( DriveLetter == emudrives[0]->hd_letter )
++	return(DriveLetter);
++    }
++  /* Not a high-level redirected drive */
++  return(-1);
++
++  /* this code is depreciated */
+   /* Do we even have a hard-drive? */
+   if (ConfigureParams.HardDisc.nDriveList!=DRIVELIST_NONE) {
+     /* Find drive letter(as number) */
+@@ -611,20 +634,20 @@
+ */
+ void GemDOS_CreateHardDriveFileName(int Drive,char *pszFileName,char *pszDestName)
+ {
+-  int DirIndex = Misc_LimitInt(Drive-2, 0,ConfigureParams.HardDisc.nDriveList-1);
++  /*  int DirIndex = Misc_LimitInt(Drive-2, 0,ConfigureParams.HardDisc.nDriveList-1); */
+   int i;
+ 
+-  /* another temporary hack */
+-  if(pszFileName[0] == '\0')return; /* check for valid string */
++  if(pszFileName[0] == '\0') return; /* check for valid string */
++
+   /* case full filename "C:\foo\bar" */
+   if(pszFileName[1] == ':') {
+     sprintf(pszDestName, "%s%s", emudrives[0]->hd_emulation_dir, File_RemoveFileNameDrive(pszFileName)); 
+-  } 
+-  /* Referenced from root:  "\foo\bar" */
++  }   
++  /* case referenced from root:  "\foo\bar" */
+   else if(pszFileName[0] == '\\'){  
+     sprintf(pszDestName, "%s%s", emudrives[0]->hd_emulation_dir, pszFileName); 
+   }
+-  /* referenced from current directory */
++  /* case referenced from current directory */
+   else {
+     sprintf(pszDestName, "%s%s%s", emudrives[0]->hd_emulation_dir, emudrives[0]->fs_currpath, pszFileName);
+   }
+@@ -635,19 +658,6 @@
+     if(pszDestName[i] == '\\') pszDestName[i] = '/';
+     i++;
+   }
+-  return;
+-
+-  /* Combine names */
+-  if (File_IsRootFileName(pszFileName))
+-    sprintf(pszDestName,"%s%s",ConfigureParams.HardDisc.szHardDiscDirectories[DirIndex],File_RemoveFileNameDrive(pszFileName));
+-  else {
+-    if (File_DoesFileNameEndWithSlash(szCurrentDir))
+-      sprintf(pszDestName,"%s%s%s",ConfigureParams.HardDisc.szHardDiscDirectories[DirIndex],File_RemoveFileNameDrive(szCurrentDir),File_RemoveFileNameDrive(pszFileName));
+-    else
+-      sprintf(pszDestName,"%s%s/%s",ConfigureParams.HardDisc.szHardDiscDirectories[DirIndex],File_RemoveFileNameDrive(szCurrentDir),File_RemoveFileNameDrive(pszFileName));
+-  }
+-  /* Remove any trailing slashes at end of filenames */
+-  File_RemoveFileNameTrailingSlashes(pszDestName);
+ 
+ }
+ 
+@@ -895,13 +905,24 @@
+   pDirName = (char *)STRAM_ADDR(STMemory_ReadLong(Params+SIZE_WORD));
+ 
+   Drive = GemDOS_IsFileNameAHardDrive(pDirName);
++
+   if (ISHARDDRIVE(Drive)) {
+-    /* FIXME: Check path exists, else error (GEMDOS_EPTHNF) */
+-    /*        GemDOS_CreateHardDriveFileName(Drive,"",szDirPath); */
+-    sprintf(szDirPath, "%s%s", emudrives[0]->hd_emulation_dir, pDirName);
+ 
++    if(pDirName[1] == ':') pDirName += 2;
++
++    /* FIXME: Klugdy code, check path exists, else error (GEMDOS_EPTHNF) */
++
++    sprintf(szDirPath, "%s/", pDirName);
++
++    /* front-slashify */
+     for(n=0;n<MAX_PATH;n++) if(szDirPath[n] == '\\')szDirPath[n] = '/';
+-    strcpy(emudrives[0]->fs_currpath, pDirName); 
++    
++    /* remove any trailing slashes */
++    if (szDirPath[strlen(szDirPath)-1]=='/' && szDirPath[strlen(szDirPath)-2]=='/')
++      szDirPath[strlen(szDirPath)-1] = '\0';     /* then remove it! */
++
++    
++    strcpy(emudrives[0]->fs_currpath, szDirPath); 
+     Regs[REG_D0] = GEMDOS_EOK;
+     return(TRUE);
+   }
+@@ -1046,7 +1067,8 @@
+ BOOL GemDOS_Read(unsigned long Params)
+ {
+   char *pBuffer;
+-  unsigned long nBytesRead,Size,CurrentPos,FileSize,nBytesLeft;
++  unsigned long nBytesRead,Size,CurrentPos,FileSize;
++  long nBytesLeft;
+   int Handle;
+ 
+   /* Read details from stack */
+@@ -1070,10 +1092,9 @@
+     nBytesLeft = FileSize-CurrentPos;
+ 
+     /* Check for End Of File */
+-    // if (nBytesLeft<0) {
+-    if(0){ 
+-      Regs[REG_D0] = GEMDOS_ERROR;
+-
++    if (nBytesLeft == 0) {
++      /* FIXME: should we return zero (bytes read) or an error? */ 
++       Regs[REG_D0] = 0;
+       return(TRUE);
+     }
+     else {
+@@ -1218,11 +1239,13 @@
+ */
+ int GemDOS_Pexec_LoadAndGo(unsigned long Params)
+ {
+-  /* FIXME: will generate problems with ramdiscs/ lowlevel emulated HDs */
++  /* add multiple disk support here too */
+   /* Hard-drive? */
+-  if (CurrentDrive>=2){                /* If not using A: or B:, use my own routines to load */
+-     return(CALL_PEXEC_ROUTINE); 
+-  }
++  if( CurrentDrive == emudrives[0]->hd_letter )
++    {
++      /* If not using A: or B:, use my own routines to load */
++      return(CALL_PEXEC_ROUTINE); 
++    }
+   else return(FALSE);
+ }
+ 
+@@ -1233,9 +1256,10 @@
+ int GemDOS_Pexec_LoadDontGo(unsigned long Params)
+ {
+   /* Hard-drive? */
+-  if (CurrentDrive>=2){
+-     return(CALL_PEXEC_ROUTINE); 
+-  } else return(FALSE);
++  if( CurrentDrive == emudrives[0]->hd_letter )
++    {
++      return(CALL_PEXEC_ROUTINE); 
++    } else return(FALSE);
+ }
+ 
+ /*-----------------------------------------------------------------------*/
+@@ -1315,7 +1339,6 @@
+     
+     /* open directory */
+     fsfirst_dirname(szActualFileName, InternalDTAs[DTAIndex].path);
+-
+     fsdir = opendir(InternalDTAs[DTAIndex].path);
+     
+     if( fsdir == NULL ){
+@@ -1335,8 +1358,8 @@
+     fsfirst_dirmask(szActualFileName, tempstr); /* get directory mask */
+ 
+     /* Create and populate a list of matching files. */
+-    j = 0;                     /* count number of entries matching mask */
+ 
++    j = 0;                     /* count number of entries matching mask */
+     for(i=0;i<InternalDTAs[DTAIndex].nentries;i++)
+       if(match(tempstr, files[i]->d_name)) j++;
+     
+@@ -1349,6 +1372,7 @@
+ 	InternalDTAs[DTAIndex].found[k] = files[i];
+ 	k++;
+       }
++    
+     InternalDTAs[DTAIndex].nentries = j; /* set number of legal entries */
+ 
+     if(InternalDTAs[DTAIndex].nentries == 0){
+@@ -1513,6 +1537,10 @@
+ #ifdef GEMDOS_VERBOSE
+   if(GemDOSCall <= 0x57)
+     fprintf(stderr, "GemDOS 0x%X (%s)\n",GemDOSCall,pszGemDOSNames[GemDOSCall]); 
++  if(!GemDOSCall){
++    fprintf(stderr, "Warning!!\n");
++    DebugUI();
++  }
+ #endif
+ 
+   /* Intercept call */
+@@ -1634,15 +1662,21 @@
+ /*-----------------------------------------------------------------------*/
+ /*
+   GemDOS_Boot - routine called on the first occurence of the gemdos opcode.
+-  used to set up our gemdos handler.
++  (this should be in the cartridge bootrom)
++  Sets up our gemdos handler (or, if we don't need one, just turn off keyclicks)
+  */
+ 
+ void GemDOS_Boot()
+ {
+-  bInitGemDOS = TRUE;
++  int i;
+ 
++  bInitGemDOS = TRUE;
++#ifdef GEMDOS_VERBOSE
++  fprintf(stderr, "Gemdos_Boot()\n");
++#endif
+   /* install our gemdos handler, if -e or --harddrive option used */
+-  if(emudrives != NULL){
++  if(GEMDOS_EMU_ON){
++
+     /* Patch pexec code - coded value is 4, but must be 6 for TOS > 1.00 */
+     if(TOSVersion > 0x0100) 
+       STMemory_WriteByte(CART_PEXEC_TOS, 0x06);
+diff -ruN cvs2/hdc.c hdemu2/hdc.c
+--- cvs2/hdc.c	Thu Jan  1 01:00:00 1970
++++ hdemu2/hdc.c	Sat Jan  5 04:37:48 2002
+@@ -0,0 +1,397 @@
++/*
++  Hatari
++
++  Low-level hard drive emulation
++
++*/
++
++#include "main.h"
++#include "debug.h"
++#include "decode.h"
++#include "dialog.h"
++#include "fdc.h"
++#include "hdc.h"
++#include "floppy.h"
++#include "ikbd.h"
++#include "m68000.h"
++#include "memorySnapShot.h"
++#include "mfp.h"
++#include "misc.h"
++#include "psg.h"
++#include "stMemory.h"
++#include "debugui.h"
++
++/*
++  ACSI emulation: 
++  ACSI commands are six byte-packets sent to the
++  hard drive controller (which is on the HD unit, not in the ST)
++
++  While the hard drive is busy, DRQ is high, polling the DRQ during
++  operation interrupts the current operation. The DRQ status can
++  be polled non-destructively in GPIP.
++  
++  (For simplicity, the operation is finished immediatly,
++  this is a potential bug, but I doubt it is significant,
++  we just appear to have a very fast hard drive.)
++
++  The ACSI command set is a subset of the SCSI standard.
++  (for details, see the X3T9.2 SCSI draft documents
++  from 1985, for an example of writing ACSI commands,
++  see the TOS DMA boot code) 
++*/
++
++/* #define DISALLOW_HDC_WRITE */
++/* #define HDC_VERBOSE */        /* display operations */
++/* #define HDC_REALLY_VERBOSE */ /* display command packets */
++
++/* HDC globals */
++HDCOMMAND HDCCommand;
++FILE *hd_image_file = NULL;
++int nPartitions = 0;
++short int HDCSectorCount;
++
++/* 
++  FDC registers used 
++*/
++extern short int HDCSectorCount;
++extern short int FDCSectorCountRegister;
++
++extern unsigned short int DiscControllerStatus_ff8604rd;         /* 0xff8604 (read) */
++extern unsigned short int DiscControllerWord_ff8604wr;           /* 0xff8604 (write) */
++extern unsigned short int DMAStatus_ff8606rd;                    /* 0xff8606 (read) */
++extern unsigned short int DMAModeControl_ff8606wr,DMAModeControl_ff8606wr_prev;  /* 0xff8606 (write,store prev for 'toggle' checks) */
++
++/* Our dummy INQUIRY response data */
++unsigned char inquiry_bytes[] = 
++{
++  0,                /* device type 0 = direct access device */
++  0,                /* device type qualifier (nonremovable) */
++  1,                /* ANSI version */
++  0,                /* reserved */            
++  26,               /* length of the following data */
++  ' ', ' ', ' ',                         /* Vendor specific data */
++  'H','a','t','a','r','i',' ','E',       /* Vendor */
++  'm','u','l','a','t','e','d',' ',       /* Model */
++  ' ',' ',' ',' ',                       /* Revision */
++  0,0,0,0,0,0,0,0,0,0                    /* ?? */
++};
++
++/*---------------------------------------------------------------------*/
++/*
++  Return the file offset of the sector specified in the current
++  ACSI command block.
++*/
++unsigned long HDC_GetOffset(){
++  unsigned long offset;
++
++  /* construct the logical block adress */
++  offset = ((HD_LBA_MSB(HDCCommand) << 16) 
++	    |  (HD_LBA_MID(HDCCommand)  << 8) 
++	    |  (HD_LBA_LSB(HDCCommand))) ;
++  
++  /* return value in bytes */
++  return(offset * 512);
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Seek - move to a sector
++*/
++void HDC_Seek()
++{
++
++  fseek(hd_image_file, HDC_GetOffset(),0);
++
++  FDC_SetDMAStatus(FALSE);              /* no DMA error */
++  FDC_AcknowledgeInterrupt();
++  HDCCommand.returnCode = HD_STATUS_OK;
++  FDCSectorCountRegister = 0;
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Inquiry - return some disk information
++*/
++void HDC_Inquiry()
++{
++  inquiry_bytes[4] = HD_SECTORCOUNT(HDCCommand) - 8;
++  memcpy( (char *)((unsigned long)STRam+FDC_ReadDMAAddress()), inquiry_bytes, 
++	  HD_SECTORCOUNT(HDCCommand));
++
++  FDC_SetDMAStatus(FALSE);              /* no DMA error */
++  FDC_AcknowledgeInterrupt();
++  HDCCommand.returnCode = HD_STATUS_OK;
++  FDCSectorCountRegister = 0;
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Write a sector off our disk - (seek implied)
++*/
++void HDC_WriteSector()
++{
++  /* seek to the position */
++  fseek(hd_image_file, HDC_GetOffset(),0);
++
++  /* write -if allowed */
++#ifndef DISALLOW_HDC_WRITE
++  fwrite((char *)((unsigned long)STRam+FDC_ReadDMAAddress()), 
++	 512*HD_SECTORCOUNT(HDCCommand), 1, hd_image_file); 
++#endif
++
++  FDC_SetDMAStatus(FALSE);              /* no DMA error */
++  FDC_AcknowledgeInterrupt();
++  HDCCommand.returnCode = HD_STATUS_OK;
++  FDCSectorCountRegister = 0;
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Read a sector off our disk - (implied seek)
++*/
++void HDC_ReadSector()
++{
++  /* seek to the position */
++  fseek(hd_image_file, HDC_GetOffset(),0);
++
++#ifdef HDC_VERBOSE
++  fprintf(stderr,"Reading %i sectors from 0x%lx to addr:%lx\n", HD_SECTORCOUNT(HDCCommand), HDC_GetOffset() ,FDC_ReadDMAAddress()); 
++#endif
++
++  fread((char *)((unsigned long)STRam+FDC_ReadDMAAddress()), 
++	512*HD_SECTORCOUNT(HDCCommand), 1, hd_image_file); 
++
++  FDC_SetDMAStatus(FALSE);              /* no DMA error */
++  FDC_AcknowledgeInterrupt();
++  HDCCommand.returnCode = HD_STATUS_OK;
++  FDCSectorCountRegister = 0;
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Emulation routine for HDC command packets.
++*/
++void HDC_EmulateCommandPacket()
++{
++
++  switch(HD_OPCODE(HDCCommand)){
++
++  case HD_READ_SECTOR: 
++    HDC_ReadSector();
++    break;
++  case HD_WRITE_SECTOR:
++    HDC_WriteSector();
++    break;
++    
++  case HD_INQUIRY:
++#ifdef HDC_VERBOSE
++    fprintf(stderr,"Inquiry made.\n");
++#endif
++    HDC_Inquiry();
++    break;
++
++  case HD_SEEK:        
++    HDC_Seek();
++    break;
++
++  case HD_SHIP:
++    HDCCommand.returnCode = 0xFF;
++    FDC_AcknowledgeInterrupt();
++    break;
++
++    /* as of yet unsupported commands */
++  case HD_VERIFY_TRACK:
++  case HD_FORMAT_TRACK:
++  case HD_CORRECTION:  
++  case HD_MODESENSE:   
++  case HD_REQ_SENSE:   
++
++  default:
++    HDCCommand.returnCode = HD_STATUS_OPCODE;
++    FDC_AcknowledgeInterrupt();
++    break;
++  }
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Debug routine for HDC command packets.
++*/
++void HDC_DebugCommandPacket(FILE *hdlogFile)
++{
++  switch(HD_OPCODE(HDCCommand)){
++  case HD_VERIFY_TRACK:
++    fprintf(hdlogFile, "OpCode: VERIFY TRACK\n");
++    break;
++  case HD_FORMAT_TRACK:
++    fprintf(hdlogFile, "OpCode: FORMAT TRACK\n");
++    break;  
++  case HD_READ_SECTOR: 
++    fprintf(hdlogFile, "OpCode: READ SECTOR(S)\n");
++    break;
++  case HD_WRITE_SECTOR:
++    fprintf(hdlogFile, "OpCode: WRITE SECTOR(S)\n");
++    break;
++  case HD_INQUIRY:        
++    fprintf(hdlogFile, "OpCode: INQUIRY\n");
++    break;
++  case HD_SEEK:        
++    fprintf(hdlogFile, "OpCode: SEEK\n");
++    break;
++  case HD_CORRECTION:  
++    fprintf(hdlogFile, "OpCode: CORRECTION\n");
++    break;
++  case HD_MODESENSE:   
++    fprintf(hdlogFile, "OpCode: MODESENSE\n");
++    break;
++
++  case HD_SHIP:   
++    fprintf(hdlogFile, "OpCode: SHIP\n");
++    break;
++
++  case HD_REQ_SENSE:   
++    fprintf(hdlogFile, "OpCode: MODESENSE\n");
++    break;
++
++  default:
++    fprintf(hdlogFile, "Unknown OpCode!! Value = %x\n", HD_OPCODE(HDCCommand));
++    break;
++  }
++  fprintf(hdlogFile, "Controller: %i\n", HD_CONTROLLER(HDCCommand));
++  fprintf(hdlogFile, "Drive: %i\n", HD_DRIVENUM(HDCCommand));
++  fprintf(hdlogFile, "LBA: %lx\n", HDC_GetOffset());
++
++  fprintf(hdlogFile, "Sector count: %x\n", HD_SECTORCOUNT(HDCCommand));
++  fprintf(hdlogFile, "HDC sector count: %x\n", HDCSectorCount);
++  fprintf(hdlogFile, "FDC sector count: %x\n", FDCSectorCountRegister);
++  fprintf(hdlogFile, "Control byte: %x\n", HD_CONTROL(HDCCommand));
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Print data about the hard drive image
++*/
++void HDC_GetInfo()
++{
++  long offset;
++  unsigned char hdinfo[64];
++  unsigned long size;
++  int i;
++
++  nPartitions = 0;
++  if(hd_image_file == NULL) return;
++  offset = ftell(hd_image_file); 
++
++  fseek(hd_image_file, 0x1C2, 0);
++  fread(hdinfo, 64, 1, hd_image_file);
++ 
++#ifdef HDC_VERBOSE
++  size = (((unsigned long) hdinfo[0] << 24)
++	  | ((unsigned long) hdinfo[1] << 16)
++	  | ((unsigned long) hdinfo[2] << 8)
++	  | ((unsigned long) hdinfo[3]));
++
++  fprintf(stderr, "Total disk size %li Mb\n", size>>11);
++  fprintf(stderr, "Partition 0 exists?: %s\n", (hdinfo[4] != 0)?"Yes":"No");
++  fprintf(stderr, "Partition 1 exists?: %s\n", (hdinfo[4+12] != 0)?"Yes":"No");
++  fprintf(stderr, "Partition 2 exists?: %s\n", (hdinfo[4+24] != 0)?"Yes":"No");
++  fprintf(stderr, "Partition 3 exists?: %s\n", (hdinfo[4+36] != 0)?"Yes":"No");
++#endif
++
++  for(i=0;i<4;i++)
++    if(hdinfo[4 + 12*i]) nPartitions++;
++
++  fseek(hd_image_file, offset, 0);
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Open the disk image file, set partitions.
++ */
++BOOL HDC_Init(char *filename)
++{
++  if( (hd_image_file = fopen(filename, "r+")) == NULL)
++    return( FALSE );
++
++  HDC_GetInfo();
++  if(!nPartitions) 
++    {
++      fclose( hd_image_file );
++      hd_image_file = NULL;
++      return( FALSE );
++    }
++  /* set number of partitions */
++  ConfigureParams.HardDisc.nDriveList += nPartitions;
++
++  return( TRUE );
++}
++/*---------------------------------------------------------------------*/
++/*
++  HDC_UnInit - close image file
++
++ */
++void HDC_UnInit()
++{
++  if(!(ACSI_EMU_ON)) return;
++  fclose(hd_image_file);
++  hd_image_file = NULL;
++  nPartitions = 0;
++}
++
++/*---------------------------------------------------------------------*/
++/*
++  Process HDC command packets, called when bytes are 
++  written to $FFFF8606 and the HDC (not the FDC) is selected.
++*/
++void HDC_WriteCommandPacket()
++{
++
++  /* check status byte */
++  if(((DMAModeControl_ff8606wr & 0x0018) != 8)) return;
++ 
++  /* is HDC emulation enabled? */
++  if(!(ACSI_EMU_ON)) return;
++
++  /* command byte sent, store it. */
++  HDCCommand.command[HDCCommand.byteCount++] =  (DiscControllerWord_ff8604wr&0xFF);
++  
++  /* have we recived a complete 6-byte packet yet? */
++  if(HDCCommand.byteCount >= 6){
++    
++#ifdef HDC_REALLY_VERBOSE
++    HDC_DebugCommandPacket(stderr);
++#endif
++
++    /* If it's aimed for our drive, emulate it! */
++    if((HD_CONTROLLER(HDCCommand)) == 0)
++      {
++	if(HD_DRIVENUM(HDCCommand) == 0) HDC_EmulateCommandPacket();
++      }
++    else 
++      {
++	FDC_SetDMAStatus(FALSE); 
++	FDC_AcknowledgeInterrupt();
++	HDCCommand.returnCode = HD_STATUS_NODRIVE; 
++	FDCSectorCountRegister = 0;
++	FDC_AcknowledgeInterrupt();
++      }
++    
++    HDCCommand.byteCount = 0;
++  }
++}
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
+diff -ruN cvs2/includes/gemdos.h hdemu2/includes/gemdos.h
+--- cvs2/includes/gemdos.h	Fri Dec 14 17:26:14 2001
++++ hdemu2/includes/gemdos.h	Sun Dec 30 03:45:51 2001
+@@ -92,17 +92,19 @@
+ typedef struct {
+   char hd_emulation_dir[MAX_PATH];         /* hd emulation directory */
+   char fs_currpath[MAX_PATH];              /* current path */
++  int hd_letter;                           /* drive letter */
+ } EMULATEDDRIVE;
+ 
+ extern EMULATEDDRIVE **emudrives;
+ 
+ #define  ISHARDDRIVE(Drive)  (Drive!=-1)
++#define  GEMDOS_EMU_ON  (emudrives != NULL)
+ 
+ extern BOOL bInitGemDOS;
+ extern unsigned short int CurrentDrive;
+ 
+ extern void GemDOS_Init(void);
+-extern void GemDOS_Reset(void);
++extern void GemDOS_Reset();
+ extern void GemDOS_MemorySnapShot_Capture(BOOL bSave);
+ extern void GemDOS_CreateHardDriveFileName(int Drive,char *pszFileName,char *pszDestName);
+ extern BOOL GemDOS(void);
+diff -ruN cvs2/includes/hdc.h hdemu2/includes/hdc.h
+--- cvs2/includes/hdc.h	Thu Jan  1 01:00:00 1970
++++ hdemu2/includes/hdc.h	Sun Dec 30 03:44:22 2001
+@@ -0,0 +1,60 @@
++/*
++  Hatari
++  
++  This file contains definitios used for hardware-level
++  harddrive emulation
++
++*/
++
++
++/* HD Command packet macros */
++#define HD_OPCODE(a) (a.command[0] & 0x1F)             /* get opcode (bit 0-4) */
++#define HD_CONTROLLER(a) ((a.command[0] & 0xE0)>>5)    /* get HD controller # (5-7) */
++#define HD_DRIVENUM(a) ((a.command[1] & 0xE0) >>5)     /* get drive # (5-7) */
++
++#define HD_LBA_MSB(a) ((unsigned) a.command[1] & 0x1F) /* Logical Block adress, MSB */
++#define HD_LBA_MID(a) ((unsigned) a.command[2])        /* Logical Block adress */
++#define HD_LBA_LSB(a) ((unsigned) a.command[3])        /* Logical Block adress, LSB */
++
++#define HD_SECTORCOUNT(a) (a.command[4] & 0xFF)        /* get sector count */
++#define HD_CONTROL(a) (a.command[5] & 0xFF)            /* get control byte */
++
++
++/* Opcodes */
++/* The following are multi-sector transfers with seek implied */
++#define HD_VERIFY_TRACK    0x05               /* Verify track */
++#define HD_FORMAT_TRACK    0x06               /* Format track */
++#define HD_READ_SECTOR     0x08               /* Read sector */
++#define HD_WRITE_SECTOR    0x0A               /* Write sector */
++
++/* other codes */
++#define HD_SEEK            0x0B               /* Seek */
++#define HD_CORRECTION      0x0D               /* Correction */
++#define HD_INQUIRY         0x12               /* Inquiry */
++#define HD_MODESENSE       0x1A               /* Mode sense */
++#define HD_REQ_SENSE       0x03               /* Request sense */
++#define HD_SHIP            0x1B               /* Ship drive */
++
++#define HD_STATUS_OK          0               /* OK return status */
++#define HD_STATUS_NODRIVE  0x25               /* Invalid drive */
++#define HD_STATUS_OPCODE   0x20               /* Opcode not supported */
++
++#define ACSI_EMU_ON         (nPartitions != 0) 
++/* do we have hdc emulation */
++/* 
++   Structure representing an ACSI command block.
++*/
++typedef struct {
++  int byteCount;         /* count of number of command bytes written */
++  unsigned char command[6]; 
++  short int returnCode;  /* return code from the HDC operation */
++} HDCOMMAND;
++
++extern FILE *hd_image_file;
++extern HDCOMMAND HDCCommand;
++extern short int HDCSectorCount;
++extern int nPartitions;
++
++extern void HDC_WriteCommandPacket();
++extern void HDC_DebugCommandPacket();
++extern void HDC_EmulateCommandPacket();
+diff -ruN cvs2/main.c hdemu2/main.c
+--- cvs2/main.c	Fri Dec 14 17:26:12 2001
++++ hdemu2/main.c	Sat Jan  5 04:38:01 2002
+@@ -20,6 +20,7 @@
+ #include "file.h"
+ #include "floppy.h"
+ #include "gemdos.h"
++#include "hdc.h"
+ #include "ikbd.h"
+ #include "intercept.h"
+ #include "reset.h"
+@@ -260,6 +261,7 @@
+               "  --debug or -d         Allow debug interface.\n"
+               "  --harddrive <dir>     Emulate an ST harddrive\n"
+               "     or -e <dir>         (<dir> = root directory).\n"
++              "  --hdimage <imagename> Emulate an ST harddrive with an image.\n"
+               "  --tos <file>          Use TOS image <file>.\n"
+               "  --cpulevel x          Set the CPU type (x => 680x0) (TOS 2.06 only!).\n"
+               "  --compatible          Use a more compatible (but slower) 68000 CPU mode.\n"
+@@ -299,20 +301,32 @@
+       {
+        bEnableDebug=TRUE;
+       }
++      else if (!strcmp(argv[i],"--hdimage"))
++      {
++
++	if( argc > i+1 ) 
++	  if( HDC_Init(argv[i+1]) == TRUE)
++	    {
++	      printf("Hard drive image %s mounted.\n", argv[i+1]);
++	      i++;
++	    } else {
++	      printf("Couldn't open file: %s, or no partitions\n");
++	    } 
++      }
+       else if (!strcmp(argv[i],"--harddrive") || !strcmp(argv[i],"-e"))
+       {
+ 	if(i + 1 < argc && strlen(argv[i+1])<=MAX_PATH) { /* both parameters exist */
+ 	  /* only 1 emulated drive allowed, as of yet.  */
+ 	  emudrives = malloc( sizeof(EMULATEDDRIVE *) );
+ 	  emudrives[0] = malloc( sizeof(EMULATEDDRIVE) );
+-          ConfigureParams.HardDisc.nDriveList = DRIVELIST_C;
++
+ 	  /* set emulation directory string */
+ 	  if( argv[i+1][0] != '.' && argv[i+1][0] != '/' )
+ 	    sprintf( emudrives[0]->hd_emulation_dir, "./%s", argv[i+1]);
+ 	  else
+ 	    sprintf( emudrives[0]->hd_emulation_dir, "%s", argv[i+1]);
+-	  
+-	  fprintf(stderr, "Hard drive emulation, C: <-> %s\n", emudrives[0]->hd_emulation_dir);
++       	  ConfigureParams.HardDisc.nDriveList++;
++
+ 	  i ++;
+ 	}
+       }
+@@ -396,6 +410,7 @@
+   Main_RemoveSoundTimer();
+   Floppy_EjectBothDrives();
+   Floppy_UnInit();
++  HDC_UnInit();
+   RS232_UnInit();
+   Printer_UnInit();
+   Intercept_UnInit();
+@@ -404,6 +419,7 @@
+ //FM  View_LimitCursorToScreen();
+   SDLGui_UnInit();
+   Screen_UnInit();
++  if(hd_image_file != NULL) fclose(hd_image_file);
+ 
+ #ifdef USE_DEBUGGER
+   FreeDebugDialog();
+diff -ruN cvs2/reset.c hdemu2/reset.c
+--- cvs2/reset.c	Fri Dec 14 17:26:12 2001
++++ hdemu2/reset.c	Sun Dec 30 04:31:48 2001
+@@ -64,8 +64,8 @@
+   MFP_Reset();                  /* Setup MFP chip */
+   Video_Reset();                /* Reset video */
+   if (bCold) {
++    GemDOS_Reset();               /* Reset GEMDOS emulation */
+     FDC_Reset();                /* Reset FDC */
+-    GemDOS_Reset();             /* Reset GEM */
+   }
+   PSG_Reset();                  /* Reset PSG */
+   Sound_Reset();                /* Reset Sound */
+diff -ruN cvs2/tos.c hdemu2/tos.c
+--- cvs2/tos.c	Fri Dec 14 17:26:13 2001
++++ hdemu2/tos.c	Mon Dec 31 04:03:36 2001
+@@ -22,6 +22,8 @@
+ #include "errlog.h"
+ #include "file.h"
+ #include "floppy.h"
++#include "gemdos.h"
++#include "hdc.h"
+ #include "m68000.h"
+ #include "memAlloc.h"
+ #include "memorySnapShot.h"
+@@ -38,13 +40,15 @@
+   0x400000,0x1010,0x00400000     /* MEMORYSIZE_4MB */
+ };
+ 
+-/* Bit masks of connected drives(we support upto C,D,E,F) */
++/* Bit masks of connected drives(we support up to C,D,E,F,G,H) */
+ unsigned int ConnectedDriveMaskList[] = {
+   0x03,  /* DRIVELIST_NONE  A,B         */
+   0x07,  /* DRIVELIST_C    A,B,C       */
+   0x0F,  /* DRIVELIST_CD    A,B,C,D     */
+   0x1F,  /* DRIVELIST_CDE  A,B,C,D,E   */
+   0x3F,  /* DRIVELIST_CDEF  A,B,C,D,E,F */
++  0x7F,  /* DRIVELIST_CDEFG  A,B,C,D,E,F,G */
++  0xFF,  /* DRIVELIST_CDEFGH  A,B,C,D,E,F,G,H */
+ };
+ 
+ unsigned short int TOSVersion;          /* eg, 0x0100, 0x0102 */
+@@ -177,14 +181,25 @@
+       STMemory_WriteWord(0xFC1384+4,NOP_OPCODE);  /* NOP */
+ 
+       /* FC03d6  JSR $FC04A8  Boot from DMA bus */
+-      if (bUseVDIRes) {
+-        STMemory_WriteWord(0xFC03D6,0xa000);      /* Init Line-A */
+-        STMemory_WriteWord(0xFC03D6+2,0xa0ff);    /* Trap Line-A (to get structure) */
+-      }
+-      else {
+-        STMemory_WriteWord(0xFC03D6,NOP_OPCODE);    /* NOP */
+-        STMemory_WriteWord(0xFC03D6+2,NOP_OPCODE);  /* NOP */
+-      }
++      /* This doesn't need to be patched - but we do
++	 need to force set condrv ($4c2), because the
++	 ACSI driver (if any) will reset it, this is 
++	 done after the DMA bus boot (when the driver loads), 
++	 replacing the RTS with our own
++	 routine which sets condrv and then RTSes. */
++	STMemory_WriteWord(0xFC04d4, CONDRV_OPCODE);
++
++/* FIXME: this line-a stuff needs a new home, 
++   since we need DMA boot (perhaps the hdv_boot NOPs?) */
++/*        if (bUseVDIRes) { */
++/*          STMemory_WriteWord(0xFC03D6,0xa000); */     /* Init Line-A */ 
++/*          STMemory_WriteWord(0xFC03D6+2,0xa0ff); */   /* Trap Line-A (to get structure) */ 
++/*        } */
++/*        else { */
++	
++/*          STMemory_WriteWord(0xFC03D6,NOP_OPCODE); */   /* NOP */
++/*          STMemory_WriteWord(0xFC03D6+2,NOP_OPCODE);*/  /* NOP */ 
++/*        } */
+ 
+       /* Timer D(MFP init 0xFC21B4), set value before call Set Timer routine */
+       STMemory_WriteWord(0xFC21F6,TIMERD_OPCODE);
+@@ -202,30 +217,26 @@
+         STMemory_WriteWord(0xFC0F44, RTS_OPCODE);     /* RTS */
+ 
+       /* FC1568  JSR $FC0C2E  hdv_boot, load boot sector */
++      /* see comments above -Sven */
+       if( STMemory_ReadLong(0xFC1568)==0x4eb900fcL ) {
+-        STMemory_WriteWord(0xFC1568, NOP_OPCODE);     /* NOP */
++	STMemory_WriteWord(0xFC1568, NOP_OPCODE);     /* NOP */
+         STMemory_WriteWord(0xFC1568+2, NOP_OPCODE);   /* NOP */
+         STMemory_WriteWord(0xFC1568+4, NOP_OPCODE);   /* NOP */
+       }
+ 
+       /* FC0472  BSR.W $FC0558  Boot from DMA bus */
++      STMemory_WriteWord(0xFC0584, CONDRV_OPCODE);
++
+       if( STMemory_ReadLong(0xFC0472)==0x610000e4L )
+        if (bUseVDIRes) {
+-         STMemory_WriteWord(0xFC0472, 0xa000);        /* Init Line-A */
+-         STMemory_WriteWord(0xFC0472+2, 0xa0ff);      /* Trap Line-A (to get structure) */
++	 /*         STMemory_WriteWord(0xFC0472, 0xa000); */       /* Init Line-A */
++         /* STMemory_WriteWord(0xFC0472+2, 0xa0ff); */     /* Trap Line-A (to get structure) */
+        }
+        else {
+-         STMemory_WriteWord(0xFC0472, NOP_OPCODE);    /* NOP */
+-         STMemory_WriteWord(0xFC0472+2, NOP_OPCODE);  /* NOP */
++         /* STMemory_WriteWord(0xFC0472, NOP_OPCODE); */    /* NOP */
++         /* STMemory_WriteWord(0xFC0472+2, NOP_OPCODE); */  /* NOP */
+        }
+ 
+-      /* FC0302  CLR.L $4C2  Set connected drives */
+-      if( STMemory_ReadLong(0xFC0302)==0x42b90000L ) {
+-        STMemory_WriteWord(0xFC0302, CONDRV_OPCODE);
+-        STMemory_WriteWord(0xFC0302+2, NOP_OPCODE);   /* NOP */
+-        STMemory_WriteWord(0xFC0302+4, NOP_OPCODE);   /* NOP */
+-      }
+-
+       /* Timer D (MFP init 0xFC2408) */
+       if( STMemory_ReadLong(0xFC2450)==0x74026100 )
+         STMemory_WriteWord(0xFC2450, TIMERD_OPCODE);
+@@ -247,18 +258,8 @@
+       STMemory_WriteWord(0xFC1CCE + 4,NOP_OPCODE);  /* NOP */
+ 
+       /* FC0466  BSR.W $FC054C  Boot from DMA bus */
+-      if (bUseVDIRes) {
+-        STMemory_WriteWord(0xFC0466,0xa000);        /* Init Line-A */
+-        STMemory_WriteWord(0xFC0466+2,0xa0ff);      /* Trap Line-A (to get structure) */
+-      }
+-      else {
+-        STMemory_WriteWord(0xFC0466,NOP_OPCODE);    /* NOP */
+-        STMemory_WriteWord(0xFC0466+2,NOP_OPCODE);  /* NOP */
+-      }
+-
+-      /* FC02E6  CLR.L $4C2(A5)  Set connected drives */
+-      STMemory_WriteWord(0xFC02E6,CONDRV_OPCODE);
+-      STMemory_WriteWord(0xFC02E6+2,NOP_OPCODE);    /* NOP */
++      /* see comment above -Sven */
++      STMemory_WriteWord(0xFC0576, CONDRV_OPCODE);
+ 
+       /* Timer D(MFP init 0xFC34FC) */
+       STMemory_WriteWord(0xFC3544,TIMERD_OPCODE);
+@@ -341,19 +342,16 @@
+       STMemory_WriteWord(0xE0468C,RTS_OPCODE);    /* RTS */
+ 
+       /* E04CA0  JSR $E00E8E      hdv_boot, load boot sector */
+-      STMemory_WriteWord(0xE04CA0,NOP_OPCODE);    /* NOP */
+-      STMemory_WriteWord(0xE04CA0+2,NOP_OPCODE);  /* NOP */
+-      STMemory_WriteWord(0xE04CA0+4,NOP_OPCODE);  /* NOP */
++      //      STMemory_WriteWord(0xE04CA0,NOP_OPCODE);    /* NOP */
++      //STMemory_WriteWord(0xE04CA0+2,NOP_OPCODE);  /* NOP */
++      //STMemory_WriteWord(0xE04CA0+4,NOP_OPCODE);  /* NOP */
+ 
+       /* E006AE  BSR.W $E00794    Boot from DMA bus */
+-      if (bUseVDIRes) {
+-        STMemory_WriteWord(0xE006AE,0xa000);      /* Init Line-A */
+-        STMemory_WriteWord(0xE006AE + 2,0xa0ff);  /* Trap Line-A (to get structure) */
+-      }
+-      else {
+-        STMemory_WriteWord(0xE006AE,NOP_OPCODE);      /* NOP */
+-        STMemory_WriteWord(0xE006AE + 2,NOP_OPCODE);  /* NOP */
+-      }
++      /* The 2.0x DMA bus boot routine uses two RTSes - patch both */
++      /* no bootable DMA devices */
++      STMemory_WriteWord(0xE0081A, CONDRV_OPCODE);
++      /* used if we have DMA devices */
++      STMemory_WriteWord(0xE00842, CONDRV_OPCODE);
+ 
+       /* E002FC  CLR.L $4C2      Set connected drives */
+       STMemory_WriteWord(0xE002FC,CONDRV_OPCODE);
+@@ -379,18 +377,11 @@
+       STMemory_WriteWord(0xE05944+4,NOP_OPCODE);  /* NOP */
+ 
+       /* E00898  BSR.W  $E0097A    Boot from DMA bus */
+-      if (bUseVDIRes) {
+-        STMemory_WriteWord(0xE00898,0xa000);      /* Init Line-A */
+-        STMemory_WriteWord(0xE00898+2,0xa0ff);    /* Trap Line-A (to get structure) */
+-      }
+-      else {
+-        STMemory_WriteWord(0xE00898,NOP_OPCODE);    /* NOP */
+-        STMemory_WriteWord(0xE00898+2,NOP_OPCODE);  /* NOP */
+-      }
++      /* no bootable DMA devices */
++      STMemory_WriteWord(0xE00B3E, CONDRV_OPCODE);
++      /* used if we have DMA devices */
++      STMemory_WriteWord(0xE00B66, CONDRV_OPCODE);
+ 
+-      /* E00362  CLR.L  $4C2    Set connected drives */
+-      STMemory_WriteWord(0xE00362,CONDRV_OPCODE);
+-      STMemory_WriteWord(0xE00362+2,NOP_OPCODE);  /* NOP */
+ 
+       /* E007FA  MOVE.L  #$1FFFE,D7  Run checksums on 2xROMs(skip) */
+       /* Checksum is total of TOS rom image, but get incorrect results as we've */
+@@ -443,7 +434,9 @@
+   /* Set TOS floppies */
+   STMemory_WriteWord(0x446,nBootDrive);           /* Boot up on A(0) or C(2) */
+   STMemory_WriteWord(0x4a6,0x2);                  /* Connected floppies A,B (0 or 2) */
++
+   ConnectedDriveMask = ConnectedDriveMaskList[ConfigureParams.HardDisc.nDriveList];
++
+   STMemory_WriteLong(0x4c2,ConnectedDriveMask);   /* Drives A,B and C - NOTE some TOS images overwrite value, see 'TOS_ConnectedDrive_OpCode' */
+ 
+   /* Mirror ROM boot vectors */
+diff -ruN cvs2/uae-cpu/hatari-glue.c hdemu2/uae-cpu/hatari-glue.c
+--- cvs2/uae-cpu/hatari-glue.c	Fri Dec 14 17:26:16 2001
++++ hdemu2/uae-cpu/hatari-glue.c	Sat Jan  5 03:06:35 2002
+@@ -81,15 +81,18 @@
+ 
+ /* ----------------------------------------------------------------------- */
+ /*
+-  We use an illegal opcode to set ConnectedDrives, as TOS clears this
+-  value we cannot set it on init.
++  We use an illegal opcode to set ConnectedDrives, as TOS (or an HD driver)
++  alters this value we cannot set it on init.
++  This opcode replaces the RTS at the end of the DMA bus boot routine
+ */
+ unsigned long OpCode_ConnectedDrive(uae_u32 opcode)
+ {
+- /*fprintf(stderr, "OpCode_ConnectedDrive handled\n");*/
++ fprintf(stderr, "OpCode_ConnectedDrive handled (%x)\n",ConnectedDriveMask );
+  /* Set connected drives */
+- STMemory_WriteWord(0x4c2, ConnectedDriveMask); 
+- m68k_incpc(2);
++ STMemory_WriteLong(0x4c2, ConnectedDriveMask); 
++ /* do an RTS (the opcode we replaced */
++ m68k_setpc(longget(m68k_areg(regs, 7)));
++ m68k_areg(regs, 7) += 4;
+  fill_prefetch_0();
+  return 4;
+ }

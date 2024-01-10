@@ -1,0 +1,37 @@
+# Minix Termcap
+#       Modified by Glen Overby <overby@plains.nodak.edu> 3/4/90
+#               Added insert/delete line, character, etc.  Now supports
+#               everything the console impliments that Termcap can use.
+#
+# termcap for the emulc terminals. lines ending with '-' denote
+# unimplemented features.
+#
+mx|minix|minix console:\
+        :bs:\			+
+        :co#80:li#25:\		+
+        :cd=\E[0J:\             + clear to end of screen
+        :cl=\E[H\E[0J:\		+ clear home
+        :so=\E[7m:se=\E[0m:\	+ standout - as reverse video.
+        :us=\E[4m:ue=\E[0m:\	+ underline
+        :mb=\E[5m:md=\E[1m:\	+ bold
+        :mr=\E[7m:me=\E[0m:\	+ reverse video
+        :sr=\EM:\               + insert one line
+        :cm=\E[%i%d;%dH:\	+ cursor motion
+        :ho=\E[H:\		+ home
+        :al=\E[L:AL=\E[%dL:\  	+ insert n lines
+        :ce=\E[K:\		+ clear to end of screen
+        :DC=\E[%dP:dc=\E[P:\	+ delete chars
+        :DL=\E[%dM:dl=\E[M:\	+ delete lines
+        :DO=\E[%dB:do=\E[B:\	+ down
+        :IC=\E[%d@:ic=\E[@:\	+ insert chars
+        :it#8:\			+
+        :le=^H:LE=\E[%dD:\	+ left
+        :nd=\E[C:RI=\E[%dC:\	+ right
+        :up=\E[A:UP=\E[%dA:\	+ up
+        :ku=\E[A:kd=\E[B:\	+ keyboard up and down 
+        :kl=\E[D:kr=\E[C:\	+ leyboard left and right
+        :kh=\E[H:k0=\E[Y:\	- 
+        :k1=\E[V:k2=\E[U:\	-
+        :k3=\E[T:k4=\E[S:\	-
+        :k5=\E[G:		-
+

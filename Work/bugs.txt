@@ -1,0 +1,189 @@
+BUGS.TXT : specific bugs to the CPU 68000 implementation.
+
+Corrections, etc, also mentioned.
+
+Doc :
+
+CCR handling
+------------
+
+nz_save is set to 1 when N and Z are 0, 0 if Z (null), -1 if N (negative).
+CHECK_CCR() computes nz_save from sr.
+FIX_CCR() updates sr according to nz_save.
+SET_NZ(_x) means nz_save = _x
+SET_N(), SET_Z(), UNSET_Z(), UNSET_N(), UNSET_NZ() all modify nz_save.
+
+? FIX_CCR() is not always done ? check this.
+
+SET_VCX_SUB or ADD : sets V,C and X for the pattern r = x op s.
+
+SR handling
+-----------
+
+sr the potential garbage in the unimplemented bits of sr are filtered
+out when 
+- copying sr to another place ??
+or
+- setting sr ??
+
+ORI_TO_CCR : FIX_CCR(); sr &= ~0xff; sr |= imm & 0xff;  not filtered
+ORI_TO_SR : FIX_CCR(), not filtered
+ANDI_CCR : FIX_CCR(); sr &= ~MASK_CC | (imm & MASK_CC); CHECK_CCR();
+  filtered
+ANDI_TO_SR : FIX_CCR(); sr &= imm; CHECK_CCR(); filtered by AND
+EORI_CCR : FIX_CCR(); sr ^= imm & MASK_CC; CHECK_CCR(); filtered.
+EORI_TO_SR : FIX_CCR(); sr ^= imm; CHECK_CCR();
+  not filtered.
+MOVE_SR : FIX_CCR(); S_$1($2,sr); /* FIXME: read before write according to manual! */
+  not filtered.
+MOVE_TO_CCR: sr &= ~0xff; sr |= d & 0xff; /* BUG!!!! */ CHECK_CCR();
+  not filtered.
+MOVE_TO_SR: sr = d & SR_IMPLEMENTED; /* BUG!!!! -> set CCR before or after? */
+        CHECK_CCR();
+  filtered
+STOP: sr = $1;  not filtered
+RTE : sr = POP_UW(); CHECK_CCR(); not filtered
+RTR : UW ccr = POP_UW() & 0xff; sr &= ~0xff; sr |= ccr; CHECK_CCR();
+  not filtered.
+in execptions, PUSH_UW(sr) and PUSH_UW(tsr) are not filtered.
+
+so, if sr is not filtered when copied to somewhere else, it must
+be filtered wen getting a new value.
+
+Memory handling
+---------------
+
+UL vaddr ?
+void *addr ?
+
+LOAD_TABLE : some tables are with x == 1. (IOTAB1_flags_LOAD)
+
+TRIM(_x) is (_x & MEM_MASK): make sure x is within mem[] bounds. 
+ADDR(_x) = pointer to mem[_x]. NEVER USE THIS !!!
+MEM(_x) : pointer to mem[TRIM(_x)].
+LOAD_z : use LOAD_z(MEM(_x)) . where z = B, W, L, UB, UW, UL.
+STORE_z like LOAD_Z, works with host addresses.
+
+LU_z, SU_z : similar to LOAD_z and STORE_z but check alignement for longs.
+ 
+"M for memory"
+LM_z, SM_z : LU_z and SU_z but using data in the correct byte order.
+
+"R for register"
+LR_z, SR_z : using registers host addresses, always in the host byte order.
+  (defined as LOAD_z and STORE_z)
+
+"DREG for data reg"
+LDREG_z, SDREG_z : usr LR_z and SR_z with the registers array.
+
+LS_z : load super, i.e. only in super mode, using atari addresses.
+?? seems strange. warning, the LS_ and US_ macros for 
+addressing modes differ. to be analysed.
+SS_z : store super.
+
+NORMAL_ADDRESS_X_X : 1 if normal user address 
+
+not used : (cpu.c)
+SAVE_ADDRESS(d) : addr = d ?????
+CLS_z(s) : addr = 0, vaddr = s, return CL_z(s)
+US_z(x) : if(addr == 0) CS_z(vaddr,x) else SR_z(addr,x)  ???
+
+"Check Load", using atari addresses
+CL_z : TRIM; if normal address, return LM_z(ADDR(s)) else LS_z(s).
+"Check Store", using atari addresses
+CS_z : TRIM; if normal address, do CM_z(ADDR(s),v) else do SS_z(s,v).
+(also check odd adresses).
+
+SR_...
+
+
+Done: double bus error halts the cpu, which can only restart if reset.
+
+bug: bus error and adress error stack frames should contain 
+  - I/N : exception while processing an instruction, or processing an
+  exception
+  - the code word of the instruction executed, or ?? if no instr ??
+  - the address of the pc, or the address of the exception vector ??
+  - the FC0-FC2 function codes (data mode or instr mode).
+
+question : SDREG_LONG in MOVEA ??
+
+question : sign extension in MOVEA ?
+
+question : read before write move_sr ?
+
+question : CHECK_PC, TRACE, NOTRACE ?
+
+Done: TRAPV raised ex_privileged() instead of ex_overflow().
+
+question : sr &= ~MASK_CC | MASK_CC_Z; /* FIXME? */ in SUBX is pointless
+  since Z and N are kept in nz_save.
+  => check all occurrences of MASK_CC_Z and MASK_CC_N.
+
+question : all shift operations are to be revised entirely: 
+  - the value of the displacement is the unsigned register value modulo 64.
+  - check C standard the semantics of >> and << operators.
+  - C and X have different bahaviour when the displacement is null.
+  - what means SHWRAP32 ?
+
+question : F_TRACE1 and F_TRACE0 ?
+  understand how tracing works. 
+
+bug : sr |= 0x0700 in bus error.
+
+Done : cleaned sr mask. changed SR_IMPLEMENTED to MASK_SR. 
+  - systematically checked that sr always lies within MASK_SR when set :
+    ORI_TO_SR, EORI_TO_SR, MOVE_TO_SR, STOP, RTE, 
+  - modified 0xff to MASK_CC when required :
+    ORI_TO_CCR, MOVE_TO_CCR, RTR, 
+  - added CHECK_CCR() when sr is modified (to keep nz_save up to date) :
+    ORI_TO_CCR, ORI_TO_SR, STOP, 
+
+question : According to the manuals, 
+  - MOVE from CCR is not a 68000 instruction. (68010 and better)
+  - MOVE from SR is not a 68000 instruction (68EC000, 68010 and better)
+  - MOVE from SR is a privileged instruction.
+  - MOVE to SR is a 68000 privileged instruction.
+  However, the TOS 2.06 makes extensive use of MOVE from SR, 
+  and some use of move from CCR.
+  The TOS 1.00 does not use MOve from CCR, but uses also MOVE from SR.
+  Some ordinary programs do use move from SR.
+  the question is : is move from sr in user mode 
+  - privileged ?
+  - returning the full SR ?
+  - only returning CCR ?
+  
+
+Bug : setting both N and Z in CCR will not survive CHECK_CCR() followed 
+  by FIX_CCR().
+
+Done : added comment handling in gen.c for lines starting with a '#' in
+  the file 68000.def
+
+
+Done : Exception 8 at pc=000166fa,sp=0001aad4 (iw=52ae) -> 00e00638
+  Bus error at 16550, sp=fffffffc, sr=0 addr=7ffffc rw=0
+  52ae xxxx means addq.l #1, $xxxx(a6).
+  exception 8 means : privileged. 
+  (was, move from SR assumed to be privileged)
+
+BUG : 
+  Bus error at 16550, sp=fffffffc, sr=0 addr=7ffffc rw=0
+  Bus error at 164ae, sp=fffffffa, sr=0 addr=7ffffa rw=0
+  does not generate a double bus error.
+  
+BUG: exception reporting does not indicate the correct PC/instr word,
+  but the next one.
+  
+BUG: bus and address error does not report the full adsress lines
+
+BUG : bus and address errors, pc is not checked.
+
+BUG: it is legal to read low mem from user mode. Should be illegal.
+
+BUG : SS_W, implement as a word access ?? instead of two bytes ?
+
+Done : rewrote BCD_ADD and SUB functions. Checked against an actual 68020.
+
+--eof
+

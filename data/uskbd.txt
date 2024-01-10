@@ -1,0 +1,391 @@
+#
+# definitions for a US keyboard on the Atari ST.
+#
+
+modifier S 0x2A
+modifier C 0x1D
+modifier A 0x38
+
+scancode ' ' 0x39
+
+scancode f1 0x3B
+scancode f2 0x3C
+scancode f3 0x3D
+scancode f4 0x3E
+scancode f5 0x3F
+scancode f6 0x40
+scancode f7 0x41
+scancode f8 0x42
+scancode f9 0x43
+scancode f10 0x44
+
+scancode escape 0x01
+scancode tab 0x0F
+scancode backspace 0x0E
+scancode delete 0x53
+scancode up 0x48
+scancode down 0x50
+scancode left 0x4B
+scancode right 0x4D
+scancode help 0x61
+scancode undo 0x62
+scancode home 0x47
+scancode insert 0x52
+scancode enter 0x72
+scancode return 0x1C
+
+scancode 'a' 0x1E
+scancode 'b' 0x30
+scancode 'c' 0x2E
+scancode 'd' 0x20
+scancode 'e' 0x12
+scancode 'f' 0x21
+scancode 'g' 0x22
+scancode 'h' 0x23
+scancode 'i' 0x17
+scancode 'j' 0x24
+scancode 'k' 0x25
+scancode 'l' 0x26
+scancode 'm' 0x32
+scancode 'n' 0x31
+scancode 'o' 0x18
+scancode 'p' 0x19
+scancode 'q' 0x10
+scancode 'r' 0x13
+scancode 's' 0x1F
+scancode 't' 0x14
+scancode 'u' 0x16
+scancode 'v' 0x2F
+scancode 'w' 0x11
+scancode 'x' 0x2D
+scancode 'y' 0x15
+scancode 'z' 0x2C
+
+scancode 'A' S-'a'
+scancode 'B' S-'b'
+scancode 'C' S-'c'
+scancode 'D' S-'d'
+scancode 'E' S-'e'
+scancode 'F' S-'f'
+scancode 'G' S-'g'
+scancode 'H' S-'h'
+scancode 'I' S-'i'
+scancode 'J' S-'j'
+scancode 'K' S-'k'
+scancode 'L' S-'l'
+scancode 'M' S-'m'
+scancode 'N' S-'n'
+scancode 'O' S-'o'
+scancode 'P' S-'p'
+scancode 'Q' S-'q'
+scancode 'R' S-'r'
+scancode 'S' S-'s'
+scancode 'T' S-'t'
+scancode 'U' S-'u'
+scancode 'V' S-'v'
+scancode 'W' S-'w'
+scancode 'X' S-'x'
+scancode 'Y' S-'y'
+scancode 'Z' S-'z'
+
+scancode '1' 0x02
+scancode '2' 0x03
+scancode '3' 0x04
+scancode '4' 0x05
+scancode '5' 0x06
+scancode '6' 0x07
+scancode '7' 0x08
+scancode '8' 0x09
+scancode '9' 0x0A
+scancode '0' 0x0B
+scancode '-' 0x0C
+scancode '=' 0x0D
+scancode '`' 0x29
+
+scancode '[' 0x1A
+scancode ']' 0x1B
+scancode ';' 0x27
+scancode \' 0x28
+scancode \\ 0x2B
+scancode ',' 0x33
+scancode '.' 0x34
+scancode '/' 0x35
+
+scancode '!' S-'1'
+scancode '@' S-'2'
+scancode '#' S-'3'
+scancode '$' S-'4'
+scancode '%' S-'5'
+scancode '^' S-'6'
+scancode '&' S-'7'
+scancode '*' S-'8'
+scancode '(' S-'9'
+scancode ')' S-'0'
+scancode '_' S-'-'
+scancode '+' S-'='
+scancode '~' S-'`'
+scancode '{' S-'['
+scancode '}' S-']'
+scancode ':' S-';'
+scancode '"' S-\'
+scancode '|' S-\\
+scancode '<' S-','
+scancode '>' S-'.'
+scancode '?' S-'/'
+
+scancode lsh 0x2a
+scancode rsh 0x36
+scancode iso 0x60
+scancode kp_0 0x70
+scancode kp_1 0x6d
+scancode kp_2 0x6e
+scancode kp_3 0x6f
+scancode kp_4 0x6a
+scancode kp_5 0x6b
+scancode kp_6 0x6c
+scancode kp_7 0x67
+scancode kp_8 0x68
+scancode kp_9 0x69
+scancode kp_open 0x63
+scancode kp_close 0x66
+scancode kp_div 0x65
+scancode kp_mult 0x66
+scancode kp_dot 0x71
+scancode kp_enter 0x72
+scancode kp_minus 0x4a
+scancode kp_plus 0x4e
+
+bind 1 C-'a'
+bind 2 C-'b'
+bind 3 C-'c'
+bind 4 C-'d'
+bind 5 C-'e'
+bind 6 C-'f'
+bind 7 C-'g'
+# bind 8 C-'h' 
+# bind 9 C-'i'
+# bind 10 C-'j'
+bind 11 C-'k'
+bind 12 C-'l'
+# bind 13 C-'m'
+bind 14 C-'n'
+bind 15 C-'o'
+bind 16 C-'p'
+bind 17 C-'q'
+bind 18 C-'r'
+bind 19 C-'s'
+bind 20 C-'t'
+bind 21 C-'u'
+bind 22 C-'v'
+bind 23 C-'w'
+bind 24 C-'x'
+bind 25 C-'y'
+bind 26 C-'z'
+# escape 
+bind 28 C-\\
+bind 29 C-']'
+
+# not possible ? 
+# bind 30 C-'^'
+# bind 31 C-'_'
+
+bind 27 escape
+bind KEY_BACKSPACE backspace
+bind 8 backspace
+bind 9 tab
+bind KEY_RETURN return
+bind KEY_ENTER enter
+bind 13 return
+bind 10 return
+bind KEY_IC insert
+bind KEY_DC delete
+bind 127 delete
+bind KEY_HOME home
+bind KEY_LEFT left
+bind KEY_RIGHT right
+bind KEY_UP up
+bind KEY_DOWN down
+
+bind ALT_0 A-'0'
+bind ALT_1 A-'1'
+bind ALT_2 A-'2'
+bind ALT_3 A-'3'
+bind ALT_4 A-'4'
+bind ALT_5 A-'5'
+bind ALT_6 A-'6'
+bind ALT_7 A-'7'
+bind ALT_8 A-'8'
+bind ALT_9 A-'9'
+bind ALT_BKSP A-backspace
+bind ALT_BQUOTE A-'`'
+bind ALT_BSLASH A-\\
+bind ALT_COMMA A-','
+bind ALT_DEL A-delete
+bind ALT_DOWN A-down
+bind ALT_ENTER A-enter
+bind ALT_EQUAL A-'='
+bind ALT_ESC A-escape
+bind ALT_FQUOTE A-\'
+bind ALT_FSLASH A-'/'
+bind ALT_HOME A-home
+bind ALT_INS A-insert
+# bind ALT_LBRACKET A-')'
+bind ALT_LEFT A-left
+bind ALT_MINUS A-'-'
+bind ALT_PAD0 A-kp_0
+bind ALT_PAD1 A-kp_1
+bind ALT_PAD2 A-kp_2
+bind ALT_PAD3 A-kp_3
+bind ALT_PAD4 A-kp_4
+bind ALT_PAD5 A-kp_5
+bind ALT_PAD6 A-kp_6
+bind ALT_PAD7 A-kp_7
+bind ALT_PAD8 A-kp_8
+bind ALT_PAD9 A-kp_9
+bind ALT_PADENTER A-kp_enter
+bind ALT_PADMINUS A-kp_minus
+bind ALT_PADPLUS A-kp_plus
+bind ALT_PADSLASH A-kp_div
+bind ALT_PADSTAR A-kp_mult
+bind ALT_PADSTOP A-kp_dot
+# bind ALT_RBRACKET A-'('
+bind ALT_RIGHT A-right
+bind ALT_SEMICOLON A-';'
+bind ALT_STOP A-'.'
+bind ALT_TAB A-tab
+bind ALT_UP A-up
+bind ALT_A A-'a'
+bind ALT_B A-'b'
+bind ALT_C A-'c'
+bind ALT_D A-'d'
+bind ALT_E A-'e'
+bind ALT_F A-'f'
+bind ALT_G A-'g'
+bind ALT_H A-'h'
+bind ALT_I A-'i'
+bind ALT_J A-'j'
+bind ALT_K A-'k'
+bind ALT_L A-'l'
+bind ALT_M A-'m'
+bind ALT_N A-'n'
+bind ALT_O A-'o'
+bind ALT_P A-'p'
+bind ALT_Q A-'q'
+bind ALT_R A-'r'
+bind ALT_S A-'s'
+bind ALT_T A-'t'
+bind ALT_U A-'u'
+bind ALT_V A-'v'
+bind ALT_W A-'w'
+bind ALT_X A-'x'
+bind ALT_Y A-'y'
+bind ALT_Z A-'z'
+
+bind CTL_BKSP C-backspace
+bind CTL_DEL C-delete
+bind CTL_DOWN C-down
+bind CTL_ENTER C-enter
+bind CTL_HOME C-home
+bind CTL_INS C-insert
+bind CTL_LEFT C-left
+bind CTL_RIGHT C-right
+bind CTL_TAB C-tab
+bind CTL_UP C-up
+
+bind CTL_PAD0 C-kp_0
+bind CTL_PAD1 C-kp_1
+bind CTL_PAD2 C-kp_2
+bind CTL_PAD3 C-kp_3
+bind CTL_PAD4 C-kp_4
+bind CTL_PAD5 C-kp_5
+bind CTL_PAD6 C-kp_6
+bind CTL_PAD7 C-kp_7
+bind CTL_PAD8 C-kp_8
+bind CTL_PAD9 C-kp_9
+bind CTL_PADENTER C-kp_enter
+bind CTL_PADMINUS C-kp_minus
+bind CTL_PADPLUS C-kp_plus
+bind CTL_PADSLASH C-kp_div
+bind CTL_PADSTAR C-kp_mult
+bind CTL_PADSTOP C-kp_dot
+
+bind KEY_SRIGHT S-right
+bind KEY_SLEFT S-left
+bind KEY_SHOME S-home
+bind SHF_UP S-up
+bind SHF_DOWN S-down
+bind SHF_IC S-insert
+bind SHF_DC S-delete
+bind KEY_SIC S-insert
+bind KEY_SDC S-delete
+bind KEY_BTAB S-tab
+# bind KEY_STAB S-tab
+
+bind KEY_A1 kp_7
+bind KEY_A2 kp_8
+bind KEY_A3 kp_9
+bind KEY_B1 kp_4
+bind KEY_B2 kp_5 
+bind KEY_B3 kp_6 
+bind KEY_C1 kp_1
+bind KEY_C2 kp_2
+bind KEY_C3 kp_3
+
+bind KEY_HELP help
+bind KEY_UNDO undo
+bind KEY_F11 help
+bind KEY_F12 undo
+bind KEY_F1 f1
+bind KEY_F2 f2
+bind KEY_F3 f3
+bind KEY_F4 f4
+bind KEY_F5 f5
+bind KEY_F6 f6
+bind KEY_F7 f7
+bind KEY_F8 f8
+bind KEY_F9 f9
+bind KEY_F10 f10
+
+bind KEY_F13 S-f1
+bind KEY_F14 S-f2
+bind KEY_F15 S-f3
+bind KEY_F16 S-f4
+bind KEY_F17 S-f5
+bind KEY_F18 S-f6
+bind KEY_F19 S-f7
+bind KEY_F20 S-f8
+bind KEY_F21 S-f9
+bind KEY_F22 S-f10
+bind KEY_F23 S-help
+bind KEY_F24 S-undo
+
+bind KEY_F25 C-f1
+bind KEY_F26 C-f2
+bind KEY_F27 C-f3
+bind KEY_F28 C-f4
+bind KEY_F29 C-f5
+bind KEY_F30 C-f6
+bind KEY_F31 C-f7
+bind KEY_F32 C-f8
+bind KEY_F33 C-f9
+bind KEY_F34 C-f10
+bind KEY_F35 C-help
+bind KEY_F36 C-undo
+
+bind KEY_F37 A-f1
+bind KEY_F38 A-f2
+bind KEY_F39 A-f3
+bind KEY_F40 A-f4
+bind KEY_F41 A-f5
+bind KEY_F42 A-f6
+bind KEY_F43 A-f7
+bind KEY_F44 A-f8
+bind KEY_F45 A-f9
+bind KEY_F46 A-f10
+bind KEY_F47 A-help
+bind KEY_F48 A-undo
+
+
+
+
+

@@ -1,0 +1,15 @@
+Release notes for STonC version 0.7.0
+=====================================
+
+This version of STonC originated as a port of the latest version
+of STonX (version 0.6.7 epsilon) with enhancements (more hardware 
+emulated), to curses, dropping audio and X support in the process.
+
+plans are 
+- to integrate some of the relevant additions to STonX (typically 
+  not the xlib or joystick stuff)
+- to add support for faster CPU engines
+- to experiment other toolkits (allegro, gtk ?)
+- ultimately to merge with STonX.
+
+

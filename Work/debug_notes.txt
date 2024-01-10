@@ -1,0 +1,28 @@
+
+have run-time configurable debug messages.
+
+Current situation
+cpu:
+- PCLOG
+- some #ifdefs to remove (PROFILE, MONITOR)
+- interrupts
+- VBL
+
+cpubis
+- exceptions (some reported, some not)
+- traps
+
+mfp: 
+- possible to trace r/w on mfp registers
+- trace interrupts ?
+- trace timers?
+
+mfp: TODO, timer B?
+
+
+command would be:
+trace bios all
+trace bios -12 -13   # all except 12.
+trace xbios
+
+

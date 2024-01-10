@@ -1,0 +1,16 @@
+
+Version 0.8.1 is an interim release correcting some bugs. 
+
+STonC now comes with a custom build of EmuTOS directly.
+You can run it directly by doing:
+  (cd Samples; ./go_emutos)
+
+The following was tested OK on this version of STonC:
+
+- Nulltos + Minix (floppy boot, hard disk installation)
+- TOS 1.02 US,  TOS 2.06 US, EmuTOS CVS 2004-01-07 
+  (executing COMMAND.PRG located in AUTO directory on floppy)
+  
+Enjoy,
+
+Laurent Vogel

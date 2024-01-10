@@ -1,0 +1,90 @@
+
+
+7 IPL levels: 1 to 7.
+
+the current priority level is indicated in SR bits.
+
+An interrupt request is signalled by asserting an interrupt
+priority on the IPL0 to IPL2 input lines. An interrupt will
+occur after the current instruction processing if:
+- this IRQ priority is greater than the current IPOL mask in SR
+or 
+- the IRQ priority is 7 and IRQ level 7 is not already pending.
+
+otherwise, the IRQ priority is made pending, waiting until the 
+IPL mask in SR goes below this IRQ priority.
+
+
+
+
+before modifying CCR, call FIX_CCR()
+after modifying CCR, call CHECK_CCR()
+after modifying upper bits of SR, CHECK_TRACE() 
+(and generally CHECK_CCR also).
+
+functions where modifying upper SR:
+
+ORI_TO_SR:
+  CHECK_TRACE
+  CHECK_CCR
+  
+ANDI_TO_SR:
+  CHECK_CCR
+  CHECK_NOTRACE ???
+
+EORI_TO_SR:
+	CHECK_CCR();
+	if (!SUPERVISOR_MODE) enter_user_mode();
+	CHECK_TRACE();
+	CHECK_NOTRACE();
+
+MOVE_TO_SR:
+	CHECK_CCR();
+	CHECK_TRACE();
+	CHECK_NOTRACE();
+
+STOP:
+	CHECK_CCR();
+	/* FIXME TRACE ?? */
+	ex_stop();
+
+RTE:
+  /* not sure about the order */
+  CHECK_PC();
+  CHECK_TRACE();
+  CHECK_NOTRACE();
+
+----
+
+So, 
+understand how TRACE0 and TRACE1 work;
+if trace, then exit the (fast) CPU loop and enter a slow 
+one?
+replace CHECK_TRACE and CHECK_NOTRACE by CHECK_SR, that
+does check TRACE and IPL.
+
+the interrupt stuff can be done in check_sr(): the PC
+will be modified, like in a JUMP.
+
+--
+
+STOP:
+
+we need a function in vtime.c that waits just enough until 
+the next alarm:
+
+implies: we need a function to wait some time: usleep()
+let rounded_delay be the delay to wait rounded down to the
+highest delay we can wait using the system function, and
+...
+
+...
+
+alarms: use ints instead of doubles?
+
+fast screen scanning?
+
+mouse and screen taken from fast?
+
+
+

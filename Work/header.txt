@@ -1,0 +1,17 @@
+/* 
+ * xxx.h - 
+ *
+ * Taken from STonX (C) 1994-1997 Marinos Yannikos & Martin D. Griffiths
+ * Modified for STonC (C) 1998-2002 Laurent Vogel
+ * Covered by the GPL version 2 or later; see COPYING for details
+ */
+ 
+/* 
+ * xxx.h - 
+ *
+ * Part of STonC (C) 1998-2002 Laurent Vogel
+ * Covered by the GPL version 2 or later; see COPYING for details
+ */
+
+
+

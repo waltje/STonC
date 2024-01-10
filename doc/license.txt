@@ -1,0 +1,2 @@
+refer to file COPYING at the root of the STonC directory.
+
