@@ -1,0 +1,731 @@
+shell/ui.c: In function 'ui_cmd_cd':
+shell/ui.c:366:3: warning: implicit declaration of function 'chdir' [-Wimplicit-function-declaration]
+  366 |   chdir(argv[1]);
+      |   ^~~~~
+shell/ui.c: At top level:
+shell/ui.c:290:13: warning: 'ui_quote' defined but not used [-Wunused-function]
+  290 | static void ui_quote(char *w)
+      |             ^~~~~~~~
+machine/boss.c: In function 'load_tos_file':
+machine/boss.c:97:10: warning: variable 'count' set but not used [-Wunused-but-set-variable]
+   97 |   size_t count;
+      |          ^~~~~
+In file included from machine/boss.c:38:
+machine/cpu.h: At top level:
+machine/cpu.h:202:20: warning: 'CS_UL' defined but not used [-Wunused-function]
+  202 | static INLINE void CS_UL (UL d, UL v)
+      |                    ^~~~~
+machine/cpu.h:195:20: warning: 'CS_L' defined but not used [-Wunused-function]
+  195 | static INLINE void CS_L (UL d, L v)
+      |                    ^~~~
+machine/cpu.h:188:20: warning: 'CS_UW' defined but not used [-Wunused-function]
+  188 | static INLINE void CS_UW (UL d, UW v)
+      |                    ^~~~~
+machine/cpu.h:181:20: warning: 'CS_W' defined but not used [-Wunused-function]
+  181 | static INLINE void CS_W (UL d, W v)
+      |                    ^~~~
+machine/cpu.h:175:20: warning: 'CS_UB' defined but not used [-Wunused-function]
+  175 | static INLINE void CS_UB (UL d, UB v)
+      |                    ^~~~~
+machine/cpu.h:169:20: warning: 'CS_B' defined but not used [-Wunused-function]
+  169 | static INLINE void CS_B (UL d, B v)
+      |                    ^~~~
+machine/cpu.h:161:18: warning: 'CL_UL' defined but not used [-Wunused-function]
+  161 | static INLINE UL CL_UL (UL s)
+      |                  ^~~~~
+machine/cpu.h:154:17: warning: 'CL_L' defined but not used [-Wunused-function]
+  154 | static INLINE L CL_L (UL s)
+      |                 ^~~~
+machine/cpu.h:147:18: warning: 'CL_UW' defined but not used [-Wunused-function]
+  147 | static INLINE UW CL_UW (UL s)
+      |                  ^~~~~
+machine/cpu.h:140:17: warning: 'CL_W' defined but not used [-Wunused-function]
+  140 | static INLINE W CL_W (UL s)
+      |                 ^~~~
+machine/cpu.h:134:18: warning: 'CL_UB' defined but not used [-Wunused-function]
+  134 | static INLINE UB CL_UB (UL s)
+      |                  ^~~~~
+machine/cpu.h:128:17: warning: 'CL_B' defined but not used [-Wunused-function]
+  128 | static INLINE B CL_B (UL s)
+      |                 ^~~~
+In file included from machine/boss.c:27:
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/mem.c:11:
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/audio.c:9:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/hdc.c:51:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/ocr.c:18:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/syscalls.c:10:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/biosdisk.c:19:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/fdc.c:27:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+machine/ikbd.c:76:12: warning: 'ikbd_bufpos' defined but not used [-Wunused-variable]
+   76 | static int ikbd_bufpos=0;
+      |            ^~~~~~~~~~~
+machine/ikbd.c:74:12: warning: 'buffer' defined but not used [-Wunused-variable]
+   74 | static int buffer[MAXBUF];
+      |            ^~~~~~
+machine/ikbd.c:67:12: warning: 'y_at_top' defined but not used [-Wunused-variable]
+   67 | static int y_at_top = 1;
+      |            ^~~~~~~~
+machine/ikbd.c:65:18: warning: 'mousemode' defined but not used [-Wunused-variable]
+   65 | static int mode, mousemode;
+      |                  ^~~~~~~~~
+machine/ikbd.c:65:12: warning: 'mode' defined but not used [-Wunused-variable]
+   65 | static int mode, mousemode;
+      |            ^~~~
+In file included from machine/ikbd.c:10:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/profile.c:9:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/blitter.c:25:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/gemdos.c:46:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/io.c:10:
+machine/cpu.h:202:20: warning: 'CS_UL' defined but not used [-Wunused-function]
+  202 | static INLINE void CS_UL (UL d, UL v)
+      |                    ^~~~~
+machine/cpu.h:195:20: warning: 'CS_L' defined but not used [-Wunused-function]
+  195 | static INLINE void CS_L (UL d, L v)
+      |                    ^~~~
+machine/cpu.h:188:20: warning: 'CS_UW' defined but not used [-Wunused-function]
+  188 | static INLINE void CS_UW (UL d, UW v)
+      |                    ^~~~~
+machine/cpu.h:181:20: warning: 'CS_W' defined but not used [-Wunused-function]
+  181 | static INLINE void CS_W (UL d, W v)
+      |                    ^~~~
+machine/cpu.h:175:20: warning: 'CS_UB' defined but not used [-Wunused-function]
+  175 | static INLINE void CS_UB (UL d, UB v)
+      |                    ^~~~~
+machine/cpu.h:169:20: warning: 'CS_B' defined but not used [-Wunused-function]
+  169 | static INLINE void CS_B (UL d, B v)
+      |                    ^~~~
+machine/cpu.h:161:18: warning: 'CL_UL' defined but not used [-Wunused-function]
+  161 | static INLINE UL CL_UL (UL s)
+      |                  ^~~~~
+machine/cpu.h:154:17: warning: 'CL_L' defined but not used [-Wunused-function]
+  154 | static INLINE L CL_L (UL s)
+      |                 ^~~~
+machine/cpu.h:147:18: warning: 'CL_UW' defined but not used [-Wunused-function]
+  147 | static INLINE UW CL_UW (UL s)
+      |                  ^~~~~
+machine/cpu.h:140:17: warning: 'CL_W' defined but not used [-Wunused-function]
+  140 | static INLINE W CL_W (UL s)
+      |                 ^~~~
+machine/cpu.h:134:18: warning: 'CL_UB' defined but not used [-Wunused-function]
+  134 | static INLINE UB CL_UB (UL s)
+      |                  ^~~~~
+machine/cpu.h:128:17: warning: 'CL_B' defined but not used [-Wunused-function]
+  128 | static INLINE B CL_B (UL s)
+      |                 ^~~~
+In file included from machine/cpu.h:13:
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/memarray.c:9:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:344:18: warning: 'LM_UL' defined but not used [-Wunused-function]
+  344 | static INLINE UL LM_UL(void *s)
+      |                  ^~~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:322:18: warning: 'LM_UW' defined but not used [-Wunused-function]
+  322 | static INLINE UW LM_UW(void *s)
+      |                  ^~~~~
+machine/mem.h:311:17: warning: 'LM_W' defined but not used [-Wunused-function]
+  311 | static INLINE W LM_W(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/native.c:10:
+machine/mem.h:393:20: warning: 'SM_UL' defined but not used [-Wunused-function]
+  393 | static INLINE void SM_UL(void *d, UL v)
+      |                    ^~~~~
+machine/mem.h:379:20: warning: 'SM_L' defined but not used [-Wunused-function]
+  379 | static INLINE void SM_L(void *d, L v)
+      |                    ^~~~
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:356:20: warning: 'SM_W' defined but not used [-Wunused-function]
+  356 | static INLINE void SM_W(void *d, W v)
+      |                    ^~~~
+machine/mem.h:332:17: warning: 'LM_L' defined but not used [-Wunused-function]
+  332 | static INLINE L LM_L(void *s)
+      |                 ^~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from machine/nfglue.c:7:
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from obj/code.c:1,
+                 from stonxcpu/cpu.c:334:
+stonxcpu/gendefs.h:165:19: warning: 'test_cond' defined but not used [-Wunused-function]
+  165 | static INLINE int test_cond (int x)
+      |                   ^~~~~~~~~
+In file included from stonxcpu/cpu.c:33:
+stonxcpu/am.h:43:17: warning: 'xV_PC_R' defined but not used [-Wunused-function]
+   43 | static INLINE L xV_PC_R(void)
+      |                 ^~~~~~~
+stonxcpu/am.h:33:17: warning: 'V_AN_R' defined but not used [-Wunused-function]
+   33 | static INLINE L V_AN_R(int reg)
+      |                 ^~~~~~
+In file included from stonxcpu/cpu.c:32:
+machine/cpu.h:202:20: warning: 'CS_UL' defined but not used [-Wunused-function]
+  202 | static INLINE void CS_UL (UL d, UL v)
+      |                    ^~~~~
+machine/cpu.h:195:20: warning: 'CS_L' defined but not used [-Wunused-function]
+  195 | static INLINE void CS_L (UL d, L v)
+      |                    ^~~~
+machine/cpu.h:188:20: warning: 'CS_UW' defined but not used [-Wunused-function]
+  188 | static INLINE void CS_UW (UL d, UW v)
+      |                    ^~~~~
+machine/cpu.h:181:20: warning: 'CS_W' defined but not used [-Wunused-function]
+  181 | static INLINE void CS_W (UL d, W v)
+      |                    ^~~~
+machine/cpu.h:175:20: warning: 'CS_UB' defined but not used [-Wunused-function]
+  175 | static INLINE void CS_UB (UL d, UB v)
+      |                    ^~~~~
+machine/cpu.h:169:20: warning: 'CS_B' defined but not used [-Wunused-function]
+  169 | static INLINE void CS_B (UL d, B v)
+      |                    ^~~~
+machine/cpu.h:161:18: warning: 'CL_UL' defined but not used [-Wunused-function]
+  161 | static INLINE UL CL_UL (UL s)
+      |                  ^~~~~
+machine/cpu.h:154:17: warning: 'CL_L' defined but not used [-Wunused-function]
+  154 | static INLINE L CL_L (UL s)
+      |                 ^~~~
+machine/cpu.h:147:18: warning: 'CL_UW' defined but not used [-Wunused-function]
+  147 | static INLINE UW CL_UW (UL s)
+      |                  ^~~~~
+machine/cpu.h:140:17: warning: 'CL_W' defined but not used [-Wunused-function]
+  140 | static INLINE W CL_W (UL s)
+      |                 ^~~~
+machine/cpu.h:134:18: warning: 'CL_UB' defined but not used [-Wunused-function]
+  134 | static INLINE UB CL_UB (UL s)
+      |                  ^~~~~
+machine/cpu.h:128:17: warning: 'CL_B' defined but not used [-Wunused-function]
+  128 | static INLINE B CL_B (UL s)
+      |                 ^~~~
+In file included from stonxcpu/cpu.c:31:
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+In file included from stonxcpu/cpubis.c:571:
+stonxcpu/gendefs.h:165:19: warning: 'test_cond' defined but not used [-Wunused-function]
+  165 | static INLINE int test_cond (int x)
+      |                   ^~~~~~~~~
+In file included from stonxcpu/gendefs.h:13:
+stonxcpu/am.h:43:17: warning: 'xV_PC_R' defined but not used [-Wunused-function]
+   43 | static INLINE L xV_PC_R(void)
+      |                 ^~~~~~~
+stonxcpu/am.h:33:17: warning: 'V_AN_R' defined but not used [-Wunused-function]
+   33 | static INLINE L V_AN_R(int reg)
+      |                 ^~~~~~
+In file included from stonxcpu/cpubis.c:18:
+machine/cpu.h:195:20: warning: 'CS_L' defined but not used [-Wunused-function]
+  195 | static INLINE void CS_L (UL d, L v)
+      |                    ^~~~
+machine/cpu.h:181:20: warning: 'CS_W' defined but not used [-Wunused-function]
+  181 | static INLINE void CS_W (UL d, W v)
+      |                    ^~~~
+machine/cpu.h:175:20: warning: 'CS_UB' defined but not used [-Wunused-function]
+  175 | static INLINE void CS_UB (UL d, UB v)
+      |                    ^~~~~
+machine/cpu.h:169:20: warning: 'CS_B' defined but not used [-Wunused-function]
+  169 | static INLINE void CS_B (UL d, B v)
+      |                    ^~~~
+machine/cpu.h:161:18: warning: 'CL_UL' defined but not used [-Wunused-function]
+  161 | static INLINE UL CL_UL (UL s)
+      |                  ^~~~~
+machine/cpu.h:154:17: warning: 'CL_L' defined but not used [-Wunused-function]
+  154 | static INLINE L CL_L (UL s)
+      |                 ^~~~
+machine/cpu.h:147:18: warning: 'CL_UW' defined but not used [-Wunused-function]
+  147 | static INLINE UW CL_UW (UL s)
+      |                  ^~~~~
+machine/cpu.h:140:17: warning: 'CL_W' defined but not used [-Wunused-function]
+  140 | static INLINE W CL_W (UL s)
+      |                 ^~~~
+machine/cpu.h:134:18: warning: 'CL_UB' defined but not used [-Wunused-function]
+  134 | static INLINE UB CL_UB (UL s)
+      |                  ^~~~~
+machine/cpu.h:128:17: warning: 'CL_B' defined but not used [-Wunused-function]
+  128 | static INLINE B CL_B (UL s)
+      |                 ^~~~
+In file included from stonxcpu/cpubis.c:17:
+machine/mem.h:368:20: warning: 'SM_UW' defined but not used [-Wunused-function]
+  368 | static INLINE void SM_UW(void *d, UW v)
+      |                    ^~~~~
+machine/mem.h:176:20: warning: 'SU_UL' defined but not used [-Wunused-function]
+  176 | static INLINE void SU_UL (UL *d, UL v)
+      |                    ^~~~~
+machine/mem.h:163:20: warning: 'SU_L' defined but not used [-Wunused-function]
+  163 | static INLINE void SU_L (L *d, L v)
+      |                    ^~~~
+machine/mem.h:145:18: warning: 'LU_UL' defined but not used [-Wunused-function]
+  145 | static INLINE UL LU_UL (UL *s)
+      |                  ^~~~~
+machine/mem.h:133:17: warning: 'LU_L' defined but not used [-Wunused-function]
+  133 | static INLINE L LU_L(L *s)
+      |                 ^~~~
+emulc/ecterm.c: In function 'te_replace_line':
+emulc/ecterm.c:672:50: warning: variable 'save_col' set but not used [-Wunused-but-set-variable]
+  672 |   int i, c, attr, old_attr, save_attr, save_row, save_col;
+      |                                                  ^~~~~~~~
+emulc/ecterm.c:672:40: warning: variable 'save_row' set but not used [-Wunused-but-set-variable]
+  672 |   int i, c, attr, old_attr, save_attr, save_row, save_col;
+      |                                        ^~~~~~~~
+emulc/ecterm.c:672:29: warning: variable 'save_attr' set but not used [-Wunused-but-set-variable]
+  672 |   int i, c, attr, old_attr, save_attr, save_row, save_col;
+      |                             ^~~~~~~~~
+emulc/vtime.c:259:13: warning: 'vt_sleep' defined but not used [-Wunused-function]
+  259 | static void vt_sleep(double delay)
+      |             ^~~~~~~~

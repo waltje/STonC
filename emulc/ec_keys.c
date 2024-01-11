@@ -10,9 +10,6 @@
 
 
 #include <string.h>
-#ifdef PDCURSES
-# define PDC_DLL_BUILD
-#endif
 #include <curses.h>
 #include "emulc.h"
 #include "ec_keys.h"

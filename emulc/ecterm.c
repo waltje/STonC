@@ -15,9 +15,6 @@
              
 #include "emulc.h"
 #include "ecpriv.h"
-#ifdef PDCURSES
-# define PDC_DLL_BUILD
-#endif
 #include <curses.h>
 
 /* virtual terminal stuff */

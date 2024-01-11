@@ -249,9 +249,6 @@ static void insert_char(char *p, char c)
   *p = c;
 }
 
-#ifdef PDCURSES
-# define PDC_DLL_BUILD
-#endif
 #include <curses.h>
 
 static void rline_do_key(Rline r, int key)

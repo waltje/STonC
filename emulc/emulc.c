@@ -74,9 +74,6 @@ void ec_set_magic_handler(int key, void (*magic_handler)(int))
  * environment with no proper curses implementation,
  * then we will have to supply our own KEY_xxx definitions.
  */
-#ifdef PDCURSES
-# define PDC_DLL_BUILD
-#endif
 #include <curses.h>
 
 static int ec_pending_magic = 0;
@@ -108,7 +105,3 @@ void ec_check_kbd(void)
       
   te_key_received(c);
 }
-
-
-
-

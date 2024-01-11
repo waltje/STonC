@@ -642,8 +642,8 @@ void set_alarm_name(double delay, reminder_type func, void * arg, char *name)
   my_alarms[i].when = when ;
   my_alarms[i].func = func ;
   my_alarms[i].arg = arg ;
-  strncpy( my_alarms[i].name, name, 10) ;
-  my_alarms[i].name[10] = 0 ;
+  strncpy( my_alarms[i].name, name, sizeof(my_alarms[i].name) - 1) ;
+  my_alarms[i].name[sizeof(my_alarms[i].name) - 1] = 0 ;
   nb_alarms ++ ;
         
   if(i == 0) {

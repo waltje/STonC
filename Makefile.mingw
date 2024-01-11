@@ -13,20 +13,20 @@ prefix	= C:/STonC
 bindir	= $(prefix)/bin/$(ARCH)
 STONC	= $(prefix)/share
 
-#CURSES	= P:/Libraries/PDCurses
-#CURLIB	= -L$(CURSES)/lib/$(ARCH) -lpdcurses
-#CURDEFS= -I$(CURSES)/include -DPDCURSES
+CURSES	= P:/Libraries/PDCurses
+CURLIB	= -L$(CURSES)/lib/$(ARCH) -lpdcurses
+CURDEF	= -I$(CURSES)/include -DPDCURSES -DPDC_DLL_BUILD=3
 
-ifeq ($(ARCH),x64)
-CURSES	= C:/MSYS2/mingw64
-else
-CURSES	= C:/MSYS2/mingw32
-endif
-CURLIB	= -L$(CURSES)/lib -lncurses
-CURDEFS	= -I$(CURSES)/include/ncurses -DNCURSES_STATIC
+#ifeq ($(ARCH),x64)
+# CURSES	= C:/MSYS2/mingw64
+#else
+# CURSES	= C:/MSYS2/mingw32
+#endif
+#CURLIB	= -L$(CURSES)/lib -lncurses
+#CURDEF	= -I$(CURSES)/include/ncurses -DNCURSES_STATIC
 
-#DEF	= -DIS_BIG_ENDIAN=0 -DSTATFS_USE_VFS -DSTONCDIR=\"$(STONC)\"
-DEF	= -DIS_BIG_ENDIAN=0 -DSTONCDIR=\"$(STONC)\" $(CURDEFS)
+#DEF	= -DIS_BIG_ENDIAN=0 -DSTATFS_USE_MOUNT -DSTONCDIR=\"$(STONC)\"
+DEF	= -DIS_BIG_ENDIAN=0 -DSTONCDIR=\"$(STONC)\"
 
 
 # Compiler
@@ -41,7 +41,7 @@ SCC	= gcc $(AOPT)
 EXE	= .exe
 CORE	=
 
-CFLAGS	= $(DEF) $(OPT) -Iinclude -I$(CURSES)#/include
+CFLAGS	= $(DEF) $(OPT) -Iinclude $(CURDEF)
 LIBS	= -L$(CURSES)/lib/$(ARCH) $(CURLIB)
 
 # Preprocessor
@@ -150,7 +150,7 @@ install: stonc$(EXE) $(DATAFILES)
 	cp stonc$(EXE) $(bindir)
 
 stonc$(EXE): $(OBJ) 
-	$(SCC)  -o $@ $(OBJ) $(LIBS) 
+	$(SCC) -o $@ $(OBJ) $(LIBS) 
 
 #
 # automatic rules
@@ -184,8 +184,8 @@ TOCLEAN += include/version.h
 
 obj/main.o obj/nf.o: include/version.h
 
-include/version.h: changelog.txt tools/version.sed
-	$(SED) -f tools/version.sed changelog.txt > $@
+#include/version.h: changelog.txt tools/version.sed
+#	$(SED) -f tools/version.sed changelog.txt > $@
 
 #
 # special STonX CPU stuff
